@@ -1,0 +1,254 @@
+name: Constitutional Compliance Check
+
+on:
+  pull_request:
+    branches: [ main, develop, release/* ]
+    types: [ opened, synchronize, reopened ]
+  pull_request_review:
+    types: [ submitted ]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+# Ensure only one workflow runs at a time per PR
+concurrency:
+  group: constitutional-compliance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  constitutional-compliance:
+    name: Constitutional Compliance Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    # Required status check for merge protection
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get list of changed Python files in this PR
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD | grep "\.py$" || echo "")
+          
+          echo "Changed Python files:"
+          echo "$CHANGED_FILES"
+          
+          # Count of changed files
+          if [ -n "$CHANGED_FILES" ]; then
+            FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l)
+          else
+            FILE_COUNT=0
+          fi
+          
+          echo "changed-files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "file-count=$FILE_COUNT" >> $GITHUB_OUTPUT
+      
+      - name: Constitutional validation
+        uses: ./.github/actions/constitutional-validator
+        id: constitutional-check
+        with:
+          validation-scope: 'changed-files'
+          strictness: 'error'
+          report-format: 'github'
+          fail-on-violations: 'false'  # We'll handle the failure logic here
+      
+      - name: Generate PR comment
+        if: always()
+        id: pr-comment
+        run: |
+          # Create detailed PR comment based on validation results
+          VALIDATION_RESULT="${{ steps.constitutional-check.outputs.validation-result }}"
+          COMPLIANCE_SCORE="${{ steps.constitutional-check.outputs.compliance-score }}"
+          VIOLATIONS_COUNT="${{ steps.constitutional-check.outputs.violations-count }}"
+          FILE_COUNT="${{ steps.changed-files.outputs.file-count }}"
+          
+          # Create comment header
+          echo "## 🏛️ Constitutional Compliance Report" > pr_comment.md
+          echo "" >> pr_comment.md
+          echo "**PR**: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" >> pr_comment.md
+          echo "**Files Analyzed**: $FILE_COUNT Python files" >> pr_comment.md
+          echo "**Compliance Score**: $COMPLIANCE_SCORE/100" >> pr_comment.md
+          echo "**Violations Found**: $VIOLATIONS_COUNT" >> pr_comment.md
+          echo "" >> pr_comment.md
+          
+          if [ "$VALIDATION_RESULT" = "pass" ]; then
+            echo "### ✅ Constitutional Compliance: PASSED" >> pr_comment.md
+            echo "" >> pr_comment.md
+            echo "🎉 **Congratulations!** This PR meets all TeamReel constitutional requirements." >> pr_comment.md
+            echo "" >> pr_comment.md
+            echo "**SE Principles Validated:**" >> pr_comment.md
+            echo "- ✅ Single Responsibility Principle" >> pr_comment.md
+            echo "- ✅ Open/Closed Principle" >> pr_comment.md
+            echo "- ✅ Liskov Substitution Principle" >> pr_comment.md
+            echo "- ✅ Interface Segregation Principle" >> pr_comment.md
+            echo "- ✅ Dependency Inversion Principle" >> pr_comment.md
+            echo "- ✅ DRY (Don't Repeat Yourself)" >> pr_comment.md
+            echo "- ✅ YAGNI (You Aren't Gonna Need It)" >> pr_comment.md
+            echo "- ✅ KISS (Keep It Simple, Stupid)" >> pr_comment.md
+            echo "" >> pr_comment.md
+            echo "This PR is **approved for merge** from a constitutional compliance perspective." >> pr_comment.md
+          else
+            echo "### ❌ Constitutional Compliance: FAILED" >> pr_comment.md
+            echo "" >> pr_comment.md
+            echo "🚫 **This PR has constitutional violations that must be fixed before merge.**" >> pr_comment.md
+            echo "" >> pr_comment.md
+            echo "**Action Required**: Please review the violations below and update your code to meet TeamReel's constitutional requirements." >> pr_comment.md
+            echo "" >> pr_comment.md
+            
+            # Add violation details if report exists
+            if [ -f "constitutional-compliance-report.json" ]; then
+              echo "**Violations Summary:**" >> pr_comment.md
+              python -c "import json; data=json.load(open('constitutional-compliance-report.json')); violations=data.get('violations', []); [print(f\"- **{v['file']}:{v['line']}** - {v['principle']}\\n  - {v['message']}\" + (f\"\\n  - 💡 *{v['suggestion']}*\" if v.get('suggestion') else '') + \"\\n\") for v in violations[:10]] if violations else None; print(f\"... and {len(violations) - 10} more violations. See full report in workflow logs.\") if len(violations) > 10 else None" >> pr_comment.md
+            fi
+            
+            echo "" >> pr_comment.md
+            echo "**How to Fix:**" >> pr_comment.md
+            echo "1. Review the specific violations listed above" >> pr_comment.md
+            echo "2. Update your code to follow the suggested improvements" >> pr_comment.md
+            echo "3. Push your changes to trigger a new constitutional validation" >> pr_comment.md
+            echo "4. Ensure all violations are resolved before requesting review" >> pr_comment.md
+            echo "" >> pr_comment.md
+            echo "**Resources:**" >> pr_comment.md
+            echo "- [TeamReel Constitutional Foundation](docs/constitutional-foundation.md)" >> pr_comment.md
+            echo "- [SE Principles Guide](docs/se-principles.md)" >> pr_comment.md
+            echo "- [Quality Gates Documentation](docs/quality-gates.md)" >> pr_comment.md
+          fi
+          
+          # Add footer
+          echo "" >> pr_comment.md
+          echo "---" >> pr_comment.md
+          echo "*This report was generated automatically by TeamReel's Constitutional Enforcement system*" >> pr_comment.md
+          echo "*Workflow: [\`constitutional-compliance.yml\`](.github/workflows/constitutional-compliance.yml)*" >> pr_comment.md
+          
+          echo "comment-file=pr_comment.md" >> $GITHUB_OUTPUT
+      
+      - name: Find existing PR comment
+        id: find-comment
+        uses: peter-evans/find-comment@v2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Constitutional Compliance Report'
+      
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id || '' }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: pr_comment.md
+          edit-mode: replace
+      
+      - name: Set status check
+        if: always()
+        run: |
+          # Set the final status based on validation result
+          VALIDATION_RESULT="${{ steps.constitutional-check.outputs.validation-result }}"
+          
+          if [ "$VALIDATION_RESULT" = "pass" ]; then
+            echo "✅ Constitutional compliance check passed"
+            echo "STATUS=success" >> $GITHUB_ENV
+          else
+            echo "❌ Constitutional compliance check failed"  
+            echo "STATUS=failure" >> $GITHUB_ENV
+          fi
+      
+      - name: Report status to GitHub
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const status = process.env.STATUS;
+            const violations = '${{ steps.constitutional-check.outputs.violations-count }}';
+            const score = '${{ steps.constitutional-check.outputs.compliance-score }}';
+            
+            const description = status === 'success' 
+              ? `✅ Constitutional compliance passed (${score}/100)`
+              : `❌ ${violations} constitutional violations found (${score}/100)`;
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: status,
+              context: 'Constitutional Compliance',
+              description: description,
+              target_url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`
+            });
+      
+      - name: Block merge if violations found
+        if: steps.constitutional-check.outputs.validation-result == 'fail'
+        run: |
+          echo "🚫 BLOCKING MERGE: Constitutional violations must be resolved"
+          echo ""
+          echo "Violations found: ${{ steps.constitutional-check.outputs.violations-count }}"
+          echo "Compliance score: ${{ steps.constitutional-check.outputs.compliance-score }}/100"
+          echo ""
+          echo "This PR cannot be merged until all constitutional violations are resolved."
+          echo "Please review the PR comment for detailed violation information and remediation steps."
+          
+          exit 1
+      
+      - name: Upload compliance report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: constitutional-compliance-report-pr-${{ github.event.pull_request.number }}
+          path: |
+            constitutional-compliance-report.json
+            pr_comment.md
+          retention-days: 30
+
+  compliance-summary:
+    name: Compliance Summary
+    runs-on: ubuntu-latest
+    needs: constitutional-compliance
+    if: always()
+    
+    steps:
+      - name: Generate workflow summary
+        run: |
+          RESULT="${{ needs.constitutional-compliance.result }}"
+          
+          echo "# 🏛️ Constitutional Compliance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR**: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Author**: @${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: \`${{ github.event.pull_request.head.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$RESULT" = "success" ]; then
+            echo "## ✅ Status: APPROVED FOR MERGE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This PR has passed all constitutional compliance checks and is ready for code review and merge." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. ✅ Constitutional compliance - **PASSED**" >> $GITHUB_STEP_SUMMARY
+            echo "2. 👀 Code review by team members" >> $GITHUB_STEP_SUMMARY
+            echo "3. 🚀 Merge when approved" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Status: MERGE BLOCKED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This PR has constitutional violations that must be resolved before merge." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Required Actions:" >> $GITHUB_STEP_SUMMARY
+            echo "1. ❌ Fix constitutional violations (see PR comment for details)" >> $GITHUB_STEP_SUMMARY
+            echo "2. 🔄 Push updated code to trigger re-validation" >> $GITHUB_STEP_SUMMARY
+            echo "3. ✅ Ensure all violations are resolved" >> $GITHUB_STEP_SUMMARY
+            echo "4. 👀 Request code review once compliant" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Reminder**: TeamReel enforces constitutional compliance to maintain code quality and architectural integrity." >> $GITHUB_STEP_SUMMARY
+          fi
