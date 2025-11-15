@@ -34,6 +34,30 @@
 - [ ] CHK005 Item with specific criteria
 - [ ] CHK006 Final item in this category
 
+## Constitution Compliance *(mandatory for all features)*
+
+### SE Principles Validation
+- [ ] CHK101 **SRP**: Each module/component has single, clear responsibility
+- [ ] CHK102 **Encapsulation**: Interfaces properly abstract implementation details
+- [ ] CHK103 **Loose Coupling**: Minimal dependencies between modules
+- [ ] CHK104 **Reusability**: No code duplication, reusable components identified
+- [ ] CHK105 **Portability**: Code works consistently across environments
+- [ ] CHK106 **Defensibility**: Input validation and error handling implemented
+- [ ] CHK107 **Maintainability**: Code is readable, tested (80%+ coverage)
+- [ ] CHK108 **Simplicity**: KISS/DRY/YAGNI followed, complexity < 10
+
+### TeamReel Architecture Standards
+- [ ] CHK201 **Folder Structure**: Follows constitutional module organization
+- [ ] CHK202 **Naming Conventions**: kebab-case (REST), snake_case (Backend), camelCase (Frontend)
+- [ ] CHK203 **Interface Documentation**: Each module has README.md with interface docs
+- [ ] CHK204 **Clean Architecture**: Dependencies flow inward, business logic isolated
+
+### Quality & Security Gates  
+- [ ] CHK301 **Testing**: TDD approach with minimum 80% coverage achieved
+- [ ] CHK302 **Performance**: API < 200ms, AI workflows < 3s response time
+- [ ] CHK303 **Security**: GDPR compliant, no PII in logs, secure defaults
+- [ ] CHK304 **Spec Compliance**: `spec-kitty verify` passes all checks
+
 ## Notes
 
 - Check items off as completed: `[x]`

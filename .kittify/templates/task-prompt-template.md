@@ -46,6 +46,29 @@ history:
 - Summarize the exact outcomes that mark this work package complete.
 - Call out key acceptance criteria or success metrics for the bundle.
 
+## SE Principles Compliance *(mandatory)*
+
+Ensure implementation follows all TeamReel SE Principles:
+
+### Architecture Compliance
+- [ ] **SRP**: Each component/module has single, clear responsibility
+- [ ] **Encapsulation**: Implementation details hidden behind clear interfaces
+- [ ] **Loose Coupling**: Minimal dependencies, modules can be replaced independently
+- [ ] **Clean Architecture**: Dependencies flow inward (core ← use cases ← interfaces)
+
+### Code Quality Standards  
+- [ ] **Reusability**: No code duplication, reusable components created where applicable
+- [ ] **Portability**: Code works consistently across dev/staging/production environments
+- [ ] **Defensibility**: Input validation implemented, secure defaults used
+- [ ] **Maintainability**: Code is readable, well-documented, and thoroughly tested
+- [ ] **Simplicity**: KISS/DRY/YAGNI principles followed, complexity < 10
+
+### TeamReel Standards
+- [ ] **Naming Conventions**: REST (kebab-case), Backend (snake_case), Frontend (camelCase)
+- [ ] **Testing**: Minimum 80% coverage achieved with unit + integration tests
+- [ ] **Performance**: API < 200ms, AI workflows < 3s response time met
+- [ ] **Security**: GDPR compliant, no PII in logs, error handling secure
+
 ## Context & Constraints
 
 - Reference prerequisite work and related documents.

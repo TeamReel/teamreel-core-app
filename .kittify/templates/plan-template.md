@@ -35,7 +35,31 @@ The planner will not begin until all planning questions have been answered—cap
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### SE Principles Compliance *(mandatory)*
+
+- [ ] **SRP Compliance**: Each module has single, clear responsibility  
+- [ ] **Clean Architecture**: Dependencies flow inward (core ← use cases ← interfaces)
+- [ ] **Modularity**: Feature modules are self-contained with clear interfaces
+- [ ] **Reusability**: Components follow composition patterns, no duplication
+- [ ] **Portability**: Code runs consistently across dev/staging/production
+- [ ] **Defensibility**: Input validation and secure defaults implemented
+- [ ] **Testability**: Minimum 80% coverage with contract + integration tests
+- [ ] **Simplicity**: KISS/DRY/YAGNI principles followed, complexity < 10
+
+### TeamReel Architecture Compliance *(mandatory)*
+
+- [ ] **Frontend Structure**: Uses `/src/modules/{auth,dashboard,workflows,editor,templates}/`
+- [ ] **Backend Structure**: Uses `/apps/{users,projects,media,ai_engine,workflows,billing}/`
+- [ ] **AI Structure**: Uses `/ai/{workflows,agents,tools,schemas}/`
+- [ ] **Naming Conventions**: REST (kebab-case), Backend (snake_case), Frontend (camelCase)
+- [ ] **Interface Documentation**: Each module has README.md with interface documentation
+
+### Quality Gates *(mandatory)*
+
+- [ ] **Testing Strategy**: TDD approach with failing tests first
+- [ ] **Performance Requirements**: API < 200ms, AI workflows < 3s
+- [ ] **Security Requirements**: GDPR compliant, no PII in logs
+- [ ] **Documentation**: All interfaces and contracts documented
 
 ## Project Structure
 
@@ -72,20 +96,48 @@ tests/
 ├── integration/
 └── unit/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+# TeamReel Web Application Structure (Constitutional Compliance)
 backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+├── apps/
+│   ├── users/              # User management (SRP)
+│   ├── projects/           # Project lifecycle (SRP)  
+│   ├── media/              # Media processing (SRP)
+│   ├── ai_engine/          # AI integration (SRP)
+│   ├── workflows/          # Workflow engine (SRP)
+│   └── billing/            # Billing & subscriptions (SRP)
+├── shared/
+│   ├── utils/              # Common utilities (Reusability)
+│   ├── common/             # Shared constants/types
+│   └── types/              # Type definitions (Abstraction)
+├── api/                    # API routing & configuration
+├── tests/                  # Backend tests (Testability)
+│   ├── unit/               # Unit tests per SE Principe 7
+│   ├── integration/        # Integration tests
+│   └── contract/           # API contract tests
+└── settings/               # Environment-specific settings (Portability)
 
 frontend/
 ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
+│   ├── modules/            # Feature modules (SRP + Modularity)
+│   │   ├── auth/           # Authentication module
+│   │   ├── dashboard/      # Dashboard module
+│   │   ├── workflows/      # Workflow management  
+│   │   ├── editor/         # Content editor
+│   │   └── templates/      # Template management
+│   ├── components/         # Reusable UI components (Reusability)
+│   ├── lib/                # Shared utilities
+│   ├── hooks/              # React custom hooks
+│   └── app/                # Next.js app router
+└── tests/                  # Frontend tests (Testability)
+    ├── components/         # Component unit tests
+    └── modules/            # Module-specific tests
+
+ai/
+├── workflows/              # AI workflow definitions (SRP)
+├── agents/                 # AI agents (SRP)
+├── tools/                  # AI tools & functions (SRP)  
+├── schemas/                # AI data schemas (Abstraction)
+└── tests/                  # AI workflow tests (Testability)
 
 # [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
 api/

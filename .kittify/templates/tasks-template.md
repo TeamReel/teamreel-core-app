@@ -20,10 +20,19 @@ description: "Work package task list template for feature implementation"
 - Include precise file paths or modules.
 
 ## Path Conventions
-- **Single project**: `src/`, `tests/`
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/`, `android/src/`
-- Adjust paths to match the implementation plan.
+
+#### TeamReel Path Conventions (Constitutional Compliance)
+- **Frontend modules**: `frontend/src/modules/{module_name}/` (camelCase for TS/React)
+- **Backend apps**: `backend/apps/{app_name}/` (snake_case for Django/Python)  
+- **AI workflows**: `ai/workflows/{workflow_name}/` (snake_case for Python)
+- **Shared utilities**: Use `shared/` folders for reusable code (Reusability principle)
+- **Tests**: Mirror source structure in `tests/` folders (Maintainability principle)
+
+#### Naming Convention Enforcement
+- **REST API endpoints**: kebab-case (`/user-profiles/`, `/video-workflows/`)
+- **Python/Django**: snake_case for models, views, functions (`user_profile`, `video_workflow`)  
+- **TypeScript/React**: camelCase for variables, functions, props (`userProfile`, `videoWorkflow`)
+- **Constants**: UPPER_SNAKE_CASE across all languages (`MAX_FILE_SIZE`, `DEFAULT_TIMEOUT`)
 
 <!-- SAMPLE CONTENT BELOW. MUST BE REPLACED. -->
 
@@ -37,8 +46,17 @@ description: "Work package task list template for feature implementation"
 
 ### Included Subtasks
 - [ ] T001 Create project structure per implementation plan
+- [ ] T001.1 Setup frontend/ with Next.js 14 + TypeScript (Portability)
+- [ ] T001.2 Setup backend/ with Django REST Framework (Modularity)  
+- [ ] T001.3 Setup ai/ with LangGraph workflows (SRP)
 - [ ] T002 Initialize [language] project with [framework] dependencies
+- [ ] T002.1 Configure ESLint + TypeScript for complexity limits (Simplicity)
+- [ ] T002.2 Setup Pytest + coverage requirements (Testability)
+- [ ] T002.3 Configure security headers + GDPR compliance (Defensibility)
 - [ ] T003 [P] Configure linting and formatting tools
+- [ ] T003.1 Setup pre-commit hooks for code quality (Maintainability)
+- [ ] T003.2 Configure Ruff for Python linting (complexity < 10)
+- [ ] T003.3 Setup ESLint rules for TypeScript (DRY principle enforcement)
 
 ### Implementation Notes
 - Major steps, commands, or configuration files required.
@@ -97,6 +115,16 @@ description: "Work package task list template for feature implementation"
 - [ ] T015 Implement [endpoint/feature] in `src/[location]/[file].py`
 - [ ] T016 Add validation and error handling
 - [ ] T017 Add story-specific logging and metrics
+
+### SE Principles Compliance Tasks *(mandatory)*
+- [ ] T018 Validate SRP: Each component has single responsibility
+- [ ] T019 Implement input validation (Defensibility)
+- [ ] T020 Add interface abstraction layer (Encapsulation)  
+- [ ] T021 Ensure loose coupling between modules (Modularity)
+- [ ] T022 Add reusable components where applicable (Reusability)
+- [ ] T023 Test portability across environments (Portability)
+- [ ] T024 Verify complexity metrics < 10 (Simplicity)
+- [ ] T025 Achieve 80%+ test coverage (Maintainability)
 
 ### Implementation Notes
 - Enumerate the workflow (tests first if required, then models → services → endpoints).

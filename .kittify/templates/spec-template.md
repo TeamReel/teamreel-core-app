@@ -103,6 +103,59 @@
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
+### Interface Contracts *(mandatory for API/data features)*
+
+<!--
+  Define clear input/output contracts following TeamReel naming conventions:
+  - REST API: kebab-case endpoints (e.g., /user-profiles/, /video-workflows/)
+  - Backend models: snake_case (e.g., user_profile, video_workflow)
+  - Frontend props: camelCase (e.g., userProfile, videoWorkflow)
+-->
+
+#### API Endpoints (if applicable)
+- **POST /[resource-name]/**: Create new [resource] 
+  - Input: `{field_name: string, other_field: number}` (snake_case)
+  - Output: `{id: string, created_at: timestamp, ...}` (snake_case)
+- **GET /[resource-name]/{id}/**: Retrieve [resource] by ID
+  - Output: Full resource object with all fields
+- **PUT /[resource-name]/{id}/**: Update existing [resource]
+  - Input: Partial resource object (only changed fields)
+
+#### Frontend Component Interface (if applicable)  
+- **Props**: `{resourceName: ResourceType, onUpdate: (data: ResourceType) => void}` (camelCase)
+- **Events**: Component emits `onSave`, `onCancel`, `onError` events
+- **State**: Internal state follows camelCase convention
+
+#### AI Workflow Interface (if applicable)
+- **Input Schema**: `{workflow_name: string, parameters: WorkflowParams}` (snake_case)
+- **Output Schema**: `{result: WorkflowResult, metadata: ExecutionMetadata}` (snake_case)
+- **Error Handling**: Standardized error codes and messages
+
+### Constitution Compliance Checklist *(mandatory)*
+
+Check each requirement against TeamReel SE Principles:
+
+- [ ] **SRP (Single Responsibility)**: Each component/module has one clear responsibility
+- [ ] **Encapsulation**: Internal details are hidden behind clear interfaces  
+- [ ] **Loose Coupling**: Minimal dependencies between modules/components
+- [ ] **Reusability**: Components can be reused without duplication
+- [ ] **Portability**: Feature works consistently across dev/staging/production
+- [ ] **Defensibility**: Input validation and error handling specified
+- [ ] **Maintainability**: Feature is testable with clear acceptance criteria
+- [ ] **Simplicity**: No unnecessary complexity, follows KISS/DRY/YAGNI principles
+
+### Security & Validation Requirements
+
+<!--
+  Mandatory for all features touching user input or sensitive data
+-->
+
+- **Input Validation**: All user inputs MUST be validated against defined schemas
+- **Authentication**: Define required auth levels (public, authenticated, admin)
+- **Authorization**: Specify permission requirements for each endpoint/action
+- **Data Privacy**: GDPR compliance - no PII in logs, explicit consent where needed
+- **Error Handling**: Errors MUST NOT expose sensitive system information
+
 ## Success Criteria *(mandatory)*
 
 <!--
