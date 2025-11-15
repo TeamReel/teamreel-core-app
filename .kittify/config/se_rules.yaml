@@ -1,0 +1,255 @@
+# TeamReel SE Principles Rule Definitions
+# Configurable rule definitions mapping each of the 8 SE principles to specific validation criteria
+# SE Principle Focus: Reusability (rules reused across all validation contexts) and Maintainability (clear, updatable rule definitions)
+
+se_principles:
+  SRP:
+    description: "Single Responsibility Principle - each module has one clear purpose"
+    rules:
+      - rule_id: "SRP001"
+        name: "function_complexity"
+        threshold: 10
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Function exceeds cyclomatic complexity limit"
+        suggested_fix: "Split complex function into smaller, focused functions"
+        severity: "ERROR"
+      
+      - rule_id: "SRP002"
+        name: "class_responsibility"
+        threshold: 5
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Class has too many public methods, suggesting multiple responsibilities"
+        suggested_fix: "Split class into smaller, single-purpose classes"
+        severity: "WARNING"
+      
+      - rule_id: "SRP003"
+        name: "function_length"
+        threshold: 50
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Function is too long, may have multiple responsibilities"
+        suggested_fix: "Break down function into smaller, focused functions"
+        severity: "WARNING"
+
+  Encapsulation:
+    description: "Internal details hidden behind clear interfaces"
+    rules:
+      - rule_id: "ENC001"
+        name: "private_member_access"
+        pattern: "\\._[a-zA-Z_]"
+        file_types: ["py"]
+        violation_message: "Direct access to private member detected"
+        suggested_fix: "Use public methods or properties to access internal state"
+        severity: "ERROR"
+      
+      - rule_id: "ENC002"
+        name: "missing_interface"
+        pattern: "class.*:"
+        file_types: ["py", "ts"]
+        violation_message: "Class missing clear interface definition"
+        suggested_fix: "Define abstract base class or interface for public contract"
+        severity: "WARNING"
+      
+      - rule_id: "ENC003"
+        name: "public_attributes"
+        pattern: "self\\.[a-zA-Z_][a-zA-Z0-9_]*\\s*="
+        file_types: ["py"]
+        violation_message: "Public attribute access may break encapsulation"
+        suggested_fix: "Use property decorators or getter/setter methods"
+        severity: "INFO"
+
+  LooseCoupling:
+    description: "Minimal dependencies between modules"
+    rules:
+      - rule_id: "LC001"
+        name: "excessive_imports"
+        threshold: 10
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Too many imports indicate tight coupling"
+        suggested_fix: "Reduce dependencies or use dependency injection"
+        severity: "WARNING"
+      
+      - rule_id: "LC002"
+        name: "circular_imports"
+        pattern: "circular dependency"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Circular import detected"
+        suggested_fix: "Restructure modules to eliminate circular dependencies"
+        severity: "ERROR"
+      
+      - rule_id: "LC003"
+        name: "direct_database_access"
+        pattern: "\\.(execute|query|cursor)"
+        file_types: ["py", "ts", "js"]
+        violation_message: "Direct database access increases coupling"
+        suggested_fix: "Use repository pattern or ORM abstraction"
+        severity: "WARNING"
+
+  Reusability:
+    description: "Components can be reused without duplication"
+    rules:
+      - rule_id: "REU001"
+        name: "code_duplication"
+        threshold: 6  # lines
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Duplicate code block detected"
+        suggested_fix: "Extract common code into reusable function or class"
+        severity: "WARNING"
+      
+      - rule_id: "REU002"
+        name: "hardcoded_values"
+        pattern: "['\"](?:[A-Z_]{2,}|[a-z]{3,})['\"]"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Hardcoded string values reduce reusability"
+        suggested_fix: "Move strings to configuration or constants file"
+        severity: "INFO"
+      
+      - rule_id: "REU003"
+        name: "magic_numbers"
+        pattern: "\\b(?!0|1)\\d{2,}\\b"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Magic numbers reduce code reusability"
+        suggested_fix: "Define named constants for numeric values"
+        severity: "INFO"
+
+  Portability:
+    description: "Code works consistently across environments"
+    rules:
+      - rule_id: "PORT001"
+        name: "absolute_paths"
+        pattern: "['\"][C-Z]:\\\\"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Absolute file paths reduce portability"
+        suggested_fix: "Use relative paths or environment variables"
+        severity: "ERROR"
+      
+      - rule_id: "PORT002"
+        name: "environment_specific_code"
+        pattern: "(platform\\.system|os\\.name|sys\\.platform)"
+        file_types: ["py"]
+        violation_message: "Environment-specific code without abstraction"
+        suggested_fix: "Use configuration or abstraction layer for platform differences"
+        severity: "WARNING"
+      
+      - rule_id: "PORT003"
+        name: "hardcoded_urls"
+        pattern: "https?://[^'\"\\s]+"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Hardcoded URLs reduce portability"
+        suggested_fix: "Move URLs to environment variables or configuration"
+        severity: "WARNING"
+
+  Defensibility:
+    description: "Input validation and secure defaults"
+    rules:
+      - rule_id: "DEF001"
+        name: "missing_input_validation"
+        pattern: "def\\s+\\w+\\([^)]*\\):"
+        file_types: ["py"]
+        violation_message: "Function missing input validation"
+        suggested_fix: "Add type hints and input validation for all parameters"
+        severity: "WARNING"
+      
+      - rule_id: "DEF002"
+        name: "sql_injection_risk"
+        pattern: "\\+.*['\"].*SELECT|INSERT|UPDATE|DELETE"
+        file_types: ["py", "ts", "js"]
+        violation_message: "Potential SQL injection vulnerability"
+        suggested_fix: "Use parameterized queries or ORM methods"
+        severity: "ERROR"
+      
+      - rule_id: "DEF003"
+        name: "password_in_code"
+        pattern: "(password|passwd|pwd)\\s*=\\s*['\"][^'\"]{3,}"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Password or sensitive data in source code"
+        suggested_fix: "Use environment variables or secure configuration"
+        severity: "ERROR"
+
+  Maintainability:
+    description: "Code is readable, testable, and well-documented"
+    rules:
+      - rule_id: "MAIN001"
+        name: "missing_docstrings"
+        pattern: "(def|class)\\s+\\w+.*:\\s*\\n(?!\\s*['\"])"
+        file_types: ["py"]
+        violation_message: "Function or class missing docstring"
+        suggested_fix: "Add descriptive docstring explaining purpose and parameters"
+        severity: "WARNING"
+      
+      - rule_id: "MAIN002"
+        name: "long_parameter_list"
+        threshold: 5
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Function has too many parameters"
+        suggested_fix: "Use parameter objects or builder pattern"
+        severity: "WARNING"
+      
+      - rule_id: "MAIN003"
+        name: "missing_type_hints"
+        pattern: "def\\s+\\w+\\([^)]*\\)(?!\\s*->):"
+        file_types: ["py"]
+        violation_message: "Function missing return type annotation"
+        suggested_fix: "Add type hints for parameters and return values"
+        severity: "INFO"
+
+  Simplicity:
+    description: "KISS/DRY/YAGNI principles - keep it simple"
+    rules:
+      - rule_id: "SIMP001"
+        name: "deep_nesting"
+        threshold: 4
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Code nesting too deep, increases complexity"
+        suggested_fix: "Use early returns or extract nested logic into functions"
+        severity: "WARNING"
+      
+      - rule_id: "SIMP002"
+        name: "unnecessary_complexity"
+        pattern: "(lambda|list comprehension|generator).*\\n.*\\1"
+        file_types: ["py"]
+        violation_message: "Overly complex expression detected"
+        suggested_fix: "Simplify expression or break into multiple steps"
+        severity: "INFO"
+      
+      - rule_id: "SIMP003"
+        name: "unused_imports"
+        pattern: "^import\\s+\\w+|^from\\s+\\w+"
+        file_types: ["py", "ts", "js", "jsx", "tsx"]
+        violation_message: "Unused import statement"
+        suggested_fix: "Remove unused imports to reduce complexity"
+        severity: "INFO"
+
+# Rule severity levels
+severity_levels:
+  ERROR: "Blocks deployment, must be fixed"
+  WARNING: "Should be addressed before merge"
+  INFO: "Suggestions for improvement"
+
+# File type configurations
+file_type_configs:
+  python:
+    extensions: [".py"]
+    complexity_tool: "radon"
+    security_tool: "bandit"
+    naming_convention: "snake_case"
+  
+  typescript:
+    extensions: [".ts", ".tsx"]
+    complexity_tool: "typescript-eslint"
+    security_tool: "eslint-plugin-security"
+    naming_convention: "camelCase"
+  
+  javascript:
+    extensions: [".js", ".jsx"]
+    complexity_tool: "eslint"
+    security_tool: "eslint-plugin-security"
+    naming_convention: "camelCase"
+
+# Global thresholds (can be overridden per rule)
+global_thresholds:
+  cyclomatic_complexity: 10
+  cognitive_complexity: 15
+  function_length: 50
+  class_length: 300
+  parameter_count: 5
+  import_count: 10
