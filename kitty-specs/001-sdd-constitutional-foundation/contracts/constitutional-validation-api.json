@@ -1,0 +1,290 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Constitutional Validation API",
+    "description": "REST-like interface for constitutional compliance validation, implemented as embedded plugin logic in spec-kitty CLI, GitHub Actions, and Git hooks.",
+    "version": "1.0.0"
+  },
+  "paths": {
+
+### POST /constitutional-compliance/validate/
+Validate feature specification or implementation against SE principles
+
+**Request Schema:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "feature_spec": {
+      "type": "string",
+      "description": "Feature specification content or file path"
+    },
+    "validation_scope": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["se_principles", "quality_gates", "naming_conventions", "security"]
+      },
+      "description": "Aspects to validate"
+    },
+    "strict_mode": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to fail on warnings or only errors"
+    },
+    "constitution_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Constitutional version to validate against"
+    }
+  },
+  "required": ["feature_spec", "validation_scope"]
+}
+```
+
+**Response Schema:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "compliance_status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "WARNING"]
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "principle": {
+            "type": "string",
+            "enum": ["SRP", "Encapsulation", "LooseCoupling", "Reusability", "Portability", "Defensibility", "Maintainability", "Simplicity"]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["ERROR", "WARNING", "INFO"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "line_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "suggested_fix": {
+            "type": "string"
+          },
+          "rule_id": {
+            "type": "string"
+          }
+        },
+        "required": ["principle", "severity", "message"]
+      }
+    },
+    "quality_gates": {
+      "type": "object",
+      "properties": {
+        "coverage_threshold": {
+          "type": "boolean"
+        },
+        "complexity_limit": {
+          "type": "boolean"
+        },
+        "security_scan": {
+          "type": "boolean"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "validation_duration": {
+          "type": "number"
+        },
+        "constitution_version": {
+          "type": "string"
+        },
+        "tool_version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": ["compliance_status"]
+}
+```
+
+### GET /constitutional-compliance/report/{feature_id}/
+Retrieve historical compliance report for a feature
+
+**Path Parameters:**
+- `feature_id`: string - Unique feature identifier
+
+**Response Schema:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "feature_id": {
+      "type": "string"
+    },
+    "reports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "compliance_status": {
+            "type": "string",
+            "enum": ["PASS", "FAIL", "WARNING"]
+          },
+          "violations_count": {
+            "type": "integer"
+          },
+          "stage": {
+            "type": "string",
+            "enum": ["spec", "plan", "tasks", "implement", "review"]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### PUT /constitutional-compliance/templates/sync/
+Synchronize templates with constitutional requirements
+
+**Request Schema:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "template_manifest": {
+      "type": "object",
+      "properties": {
+        "constitution_version": {
+          "type": "string"
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "checksum": {
+                "type": "string"
+              },
+              "se_principles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "force_update": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": ["template_manifest"]
+}
+```
+
+**Response Schema:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "sync_status": {
+      "type": "string",
+      "enum": ["SUCCESS", "PARTIAL", "FAILED"]
+    },
+    "updated_templates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "template_name": {
+            "type": "string"
+          },
+          "conflict_type": {
+            "type": "string"
+          },
+          "resolution_required": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Error Responses
+
+All endpoints return standardized error responses:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": ["VALIDATION_ERROR", "CONSTITUTIONAL_VIOLATION", "TEMPLATE_SYNC_ERROR", "INTERNAL_ERROR"]
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        }
+      },
+      "required": ["code", "message"]
+    }
+  }
+}
+```
+
+## Implementation Notes
+
+### Distributed Architecture
+This API contract is implemented as:
+- **spec-kitty CLI**: Python module with constitutional validation logic
+- **GitHub Actions**: Composite action that calls validation functions
+- **Git Hooks**: Shell scripts that invoke validation via CLI
+
+### Offline Capability
+All validation logic operates on local files:
+- Constitutional rules from `.kittify/memory/constitution.md`
+- Quality gate configs from `.kittify/config/quality-gates.yaml`
+- Template manifests from `.kittify/templates/manifest.yaml`
+
+### Performance Requirements
+- Validation completes within 30 seconds for typical features
+- Template synchronization completes within 5 minutes
+- Git hook validation provides immediate feedback

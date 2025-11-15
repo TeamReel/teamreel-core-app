@@ -1,0 +1,333 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Constitutional Validation API",
+    "description": "REST-like interface for constitutional compliance validation, implemented as embedded plugin logic in spec-kitty CLI, GitHub Actions, and Git hooks.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/constitutional-compliance/validate/": {
+      "post": {
+        "summary": "Validate feature against SE principles",
+        "description": "Validate feature specification or implementation against constitutional SE principles",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constitutional-compliance/report/{feature_id}/": {
+      "get": {
+        "summary": "Get compliance report",
+        "description": "Retrieve historical compliance report for a feature",
+        "parameters": [
+          {
+            "name": "feature_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compliance report retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constitutional-compliance/templates/sync/": {
+      "put": {
+        "summary": "Sync templates with constitution",
+        "description": "Synchronize templates with constitutional requirements",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Templates synchronized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateSyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ValidationRequest": {
+        "type": "object",
+        "required": ["feature_spec", "validation_scope"],
+        "properties": {
+          "feature_spec": {
+            "type": "string",
+            "description": "Feature specification content or file path"
+          },
+          "validation_scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["se_principles", "quality_gates", "naming_conventions", "security"]
+            }
+          },
+          "strict_mode": {
+            "type": "boolean",
+            "default": true
+          },
+          "constitution_version": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          }
+        }
+      },
+      "ValidationResponse": {
+        "type": "object",
+        "required": ["compliance_status"],
+        "properties": {
+          "compliance_status": {
+            "type": "string",
+            "enum": ["PASS", "FAIL", "WARNING"]
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Violation"
+            }
+          },
+          "quality_gates": {
+            "$ref": "#/components/schemas/QualityGates"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ValidationMetadata"
+          }
+        }
+      },
+      "Violation": {
+        "type": "object",
+        "required": ["principle", "severity", "message"],
+        "properties": {
+          "principle": {
+            "type": "string",
+            "enum": ["SRP", "Encapsulation", "LooseCoupling", "Reusability", "Portability", "Defensibility", "Maintainability", "Simplicity"]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["ERROR", "WARNING", "INFO"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "line_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "suggested_fix": {
+            "type": "string"
+          },
+          "rule_id": {
+            "type": "string"
+          }
+        }
+      },
+      "QualityGates": {
+        "type": "object",
+        "properties": {
+          "coverage_threshold": {
+            "type": "boolean"
+          },
+          "complexity_limit": {
+            "type": "boolean"
+          },
+          "security_scan": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ValidationMetadata": {
+        "type": "object",
+        "properties": {
+          "validation_duration": {
+            "type": "number"
+          },
+          "constitution_version": {
+            "type": "string"
+          },
+          "tool_version": {
+            "type": "string"
+          }
+        }
+      },
+      "ComplianceReport": {
+        "type": "object",
+        "properties": {
+          "feature_id": {
+            "type": "string"
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "compliance_status": {
+                  "type": "string",
+                  "enum": ["PASS", "FAIL", "WARNING"]
+                },
+                "violations_count": {
+                  "type": "integer"
+                },
+                "stage": {
+                  "type": "string",
+                  "enum": ["spec", "plan", "tasks", "implement", "review"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "TemplateSyncRequest": {
+        "type": "object",
+        "required": ["template_manifest"],
+        "properties": {
+          "template_manifest": {
+            "type": "object",
+            "properties": {
+              "constitution_version": {
+                "type": "string"
+              },
+              "templates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "checksum": {
+                      "type": "string"
+                    },
+                    "se_principles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "force_update": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "TemplateSyncResponse": {
+        "type": "object",
+        "properties": {
+          "sync_status": {
+            "type": "string",
+            "enum": ["SUCCESS", "PARTIAL", "FAILED"]
+          },
+          "updated_templates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "template_name": {
+                  "type": "string"
+                },
+                "conflict_type": {
+                  "type": "string"
+                },
+                "resolution_required": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": ["VALIDATION_ERROR", "CONSTITUTIONAL_VIOLATION", "TEMPLATE_SYNC_ERROR", "INTERNAL_ERROR"]
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
