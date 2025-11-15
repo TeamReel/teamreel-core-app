@@ -133,16 +133,71 @@
 
 ### Constitution Compliance Checklist *(mandatory)*
 
-Check each requirement against TeamReel SE Principles:
+**⚠️ CRITICAL: This section is MANDATORY and BLOCKING. Spec validation will fail if any item is unchecked.**
 
-- [ ] **SRP (Single Responsibility)**: Each component/module has one clear responsibility
-- [ ] **Encapsulation**: Internal details are hidden behind clear interfaces  
-- [ ] **Loose Coupling**: Minimal dependencies between modules/components
-- [ ] **Reusability**: Components can be reused without duplication
-- [ ] **Portability**: Feature works consistently across dev/staging/production
-- [ ] **Defensibility**: Input validation and error handling specified
-- [ ] **Maintainability**: Feature is testable with clear acceptance criteria
-- [ ] **Simplicity**: No unnecessary complexity, follows KISS/DRY/YAGNI principles
+Check each requirement against TeamReel's 8 SE Principles:
+
+#### SE Principle 1: Single Responsibility Principle (SRP)
+- [ ] **Component Focus**: Each class/function/module has ONE clear responsibility
+- [ ] **Interface Clarity**: Each API endpoint serves a single, well-defined purpose
+- [ ] **Function Complexity**: No function exceeds cyclomatic complexity of 10
+- [ ] **SRP Documentation**: Each component's single responsibility is clearly documented
+
+#### SE Principle 2: Encapsulation
+- [ ] **Data Hiding**: Internal implementation details are hidden behind public interfaces
+- [ ] **Access Control**: Private methods/attributes use proper naming conventions (_private)
+- [ ] **Interface Contracts**: Public APIs have clear, stable contracts that don't expose internals
+- [ ] **State Management**: Object state is controlled and validated through proper methods
+
+#### SE Principle 3: Loose Coupling
+- [ ] **Dependency Injection**: Dependencies are injected rather than hard-coded
+- [ ] **Interface Dependencies**: Depend on abstractions/interfaces, not concrete implementations
+- [ ] **Circular Dependencies**: No circular import/dependency chains
+- [ ] **Event-Driven Communication**: Use events/messages instead of direct coupling where possible
+
+#### SE Principle 4: Reusability
+- [ ] **Common Utilities**: Shared functionality is extracted into reusable utilities
+- [ ] **Configuration Externalization**: Hard-coded values are moved to configuration
+- [ ] **Generic Components**: Components are designed to be reusable across different contexts
+- [ ] **Code Duplication**: No duplicate code blocks (DRY principle enforced)
+
+#### SE Principle 5: Portability
+- [ ] **Environment Independence**: Feature works across dev/staging/production without changes
+- [ ] **Platform Compatibility**: No platform-specific code without abstraction layers
+- [ ] **Relative Paths**: Use relative paths and environment variables, not absolute paths
+- [ ] **Configuration Management**: Environment-specific settings are externalized
+
+#### SE Principle 6: Defensibility (Security)
+- [ ] **Input Validation**: All user inputs are validated against defined schemas
+- [ ] **SQL Injection Prevention**: Use parameterized queries, no string concatenation
+- [ ] **XSS Prevention**: Output encoding for user-generated content
+- [ ] **Authentication Required**: Sensitive operations require proper authentication
+- [ ] **Authorization Checks**: Permission verification for all protected resources
+- [ ] **Secret Management**: No hardcoded secrets, passwords, or API keys
+- [ ] **Error Information**: Error messages don't expose sensitive system information
+- [ ] **GDPR Compliance**: No PII in logs, proper consent mechanisms
+
+#### SE Principle 7: Maintainability
+- [ ] **Test Coverage**: Minimum 80% unit test coverage for all new code
+- [ ] **Documentation**: All public APIs and complex logic are documented
+- [ ] **Naming Conventions**: Follow TeamReel naming standards (kebab-case, snake_case, camelCase)
+- [ ] **Code Readability**: Code is self-documenting with clear variable/function names
+- [ ] **Error Handling**: Comprehensive error handling with specific error types
+- [ ] **Logging**: Appropriate logging levels for debugging and monitoring
+
+#### SE Principle 8: Simplicity
+- [ ] **KISS Principle**: Keep it simple, avoid unnecessary complexity
+- [ ] **YAGNI Compliance**: You ain't gonna need it - implement only what's required
+- [ ] **DRY Principle**: Don't repeat yourself - eliminate code duplication
+- [ ] **Minimal Dependencies**: Use only necessary external dependencies
+- [ ] **Clear Control Flow**: Avoid deeply nested logic (max 4 levels of nesting)
+- [ ] **Single Purpose Functions**: Each function does one thing well
+
+### Constitutional Enforcement Integration
+- [ ] **Quality Gates**: Feature implementation will be validated against coverage, complexity, and security thresholds
+- [ ] **Git Hooks**: Pre-commit/pre-push hooks will enforce constitutional compliance
+- [ ] **CI/CD Integration**: GitHub Actions will validate constitutional compliance before merge
+- [ ] **Spec-Kitty Integration**: Constitutional validation integrated into spec→plan→tasks workflow
 
 ### Security & Validation Requirements
 

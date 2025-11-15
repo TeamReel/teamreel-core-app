@@ -34,6 +34,12 @@ description: "Work package task list template for feature implementation"
 - **TypeScript/React**: camelCase for variables, functions, props (`userProfile`, `videoWorkflow`)
 - **Constants**: UPPER_SNAKE_CASE across all languages (`MAX_FILE_SIZE`, `DEFAULT_TIMEOUT`)
 
+#### Constitutional Validation Integration
+- **Pre-commit Hooks**: SE principle validation on all staged files
+- **Pre-push Hooks**: Quality gate enforcement (coverage, complexity, security)
+- **CI/CD Pipeline**: Constitutional compliance verified before merge
+- **Task Validation**: Each work package includes constitutional compliance verification
+
 <!-- SAMPLE CONTENT BELOW. MUST BE REPLACED. -->
 
 ---
@@ -183,6 +189,55 @@ description: "Work package task list template for feature implementation"
 | T002       | Example | WP01         | P0       | Yes       |
 | T010       | Example | WP03         | P1       | Yes       |
 | T014       | Example | WP03         | P1       | No        |
+
+---
+
+## Task Completion Checklist
+
+Before marking tasks complete, verify:
+
+### Constitutional Compliance (MANDATORY - BLOCKING)
+- [ ] **Single Responsibility Principle**: Each class/function has ONE clear purpose
+- [ ] **Open/Closed Principle**: Code is open for extension, closed for modification  
+- [ ] **Liskov Substitution**: Derived classes are substitutable for base classes
+- [ ] **Interface Segregation**: No forced dependencies on unused interfaces
+- [ ] **Dependency Inversion**: Depend on abstractions, not concretions
+- [ ] **DRY (Don't Repeat Yourself)**: No duplicate code logic
+- [ ] **YAGNI (You Aren't Gonna Need It)**: No over-engineering or unused features
+- [ ] **KISS (Keep It Simple, Stupid)**: Solutions are as simple as possible
+
+### Code Quality (Mandatory)
+- [ ] Code passes all linters (Ruff for Python, ESLint for TS/JS)
+- [ ] All tests pass with 80%+ coverage
+- [ ] Cyclomatic complexity ≤ 10 per function/method
+- [ ] No duplicate code (DRY principle)
+- [ ] Code follows Single Responsibility Principle
+
+### Documentation (Mandatory) 
+- [ ] All public functions/classes have docstrings
+- [ ] README files updated if needed
+- [ ] API documentation updated for endpoint changes
+- [ ] Constitutional compliance documented
+
+### Security & Performance (Mandatory)
+- [ ] No security vulnerabilities (run security checks)
+- [ ] Performance acceptable (no blocking operations)
+- [ ] Error handling implemented
+- [ ] Logging added for debugging
+
+### Constitutional Validation Commands
+```bash
+# Verify spec-kitty constitutional compliance
+spec-kitty verify
+
+# Run constitutional validation checks
+python src/constitutional_validator.py --check-all
+
+# Quality gate validation
+pytest --cov=. --cov-fail-under=80
+ruff check .
+npm run lint  # For frontend tasks
+```
 
 ---
 
