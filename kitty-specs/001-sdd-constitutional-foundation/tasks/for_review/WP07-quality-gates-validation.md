@@ -7,7 +7,7 @@ subtasks:
   - "T030"
 title: "Quality Gates & Validation Infrastructure"
 phase: "Phase 1 - Foundation Setup"
-lane: "doing"
+lane: "for_review"
 assignee: ""
 agent: "GitHub-Copilot"
 shell_pid: "29228"
@@ -104,3 +104,4 @@ history:
 
 - 2025-11-15T21:36:25Z – copilot – shell_pid=29228 – lane=doing – Starting quality gates and validation infrastructure implementation
 - 2025-11-16T20:26:24Z – GitHub-Copilot – shell_pid=29228 – lane=doing – Started implementation
+- 2025-11-16T20:35:11Z – GitHub-Copilot – shell_pid=29228 – lane=for_review – Ready for review
