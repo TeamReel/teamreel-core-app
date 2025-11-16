@@ -9,7 +9,7 @@ subtasks:
 title: "Constitutional Core Engine"
 phase: "Phase 1 - Foundation Setup"
 lane: "done"
-assignee: ""
+assignee: "brianstokvis"
 agent: "github-copilot"
 shell_pid: "29228"
 review_status: ""

@@ -8,7 +8,7 @@ subtasks:
 title: "GitHub Actions CI/CD Integration"
 phase: "Phase 1 - Foundation Setup"
 lane: "done"
-assignee: ""
+assignee: "brianstokvis"
 agent: "GitHub-Copilot"
 shell_pid: "29228"
 review_status: ""

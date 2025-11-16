@@ -4,7 +4,7 @@ subtasks: ["T023", "T024", "T025", "T026"]
 title: "Mission & Foundation Documentation"
 phase: "Phase 2 - Documentation"
 lane: "done"
-assignee: ""
+assignee: "brianstokvis"
 agent: "GitHub-Copilot"  
 shell_pid: "29228"
 review_status: ""
