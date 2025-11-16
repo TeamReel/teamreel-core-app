@@ -17,18 +17,50 @@ from typing import Dict, List, Optional, Union, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 
-from constitutional_validator import (
-    ConstitutionalValidator,
-    ValidationResult,
-    ValidationLevel,
-    SEPrinciple,
-)
+try:
+    from .constitutional_validator import ConstitutionalValidator, ValidationScope
+    from .compliance_reporter import ComplianceReport, Violation
+    from .violation_detector import ViolationDetector, ViolationType, DetectedViolation
+except ImportError:
+    # Fallback for direct execution
+    from constitutional_validator import ConstitutionalValidator, ValidationScope
+    from compliance_reporter import ComplianceReport, Violation
+    from violation_detector import ViolationDetector, ViolationType, DetectedViolation
+
+
+class ValidationLevel(Enum):
+    """Validation severity levels for task validation"""
+
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
+
+
+class SEPrinciple(Enum):
+    """Software Engineering Principles"""
+
+    SRP = "single_responsibility_principle"
+    ENCAPSULATION = "encapsulation"
+    LOOSE_COUPLING = "loose_coupling"
+    REUSABILITY = "reusability"
+    PORTABILITY = "portability"
+    DEFENSIBILITY = "defensibility"
+    MAINTAINABILITY = "maintainability"
+    SIMPLICITY = "simplicity"
 
 
 class TaskValidationCategory(Enum):
     """Categories of task validation checks."""
 
     CONSTITUTIONAL_CHECKLIST = "constitutional_checklist"
+    CONSTITUTIONAL_COMPLIANCE = "constitutional_compliance"
+    SE_PRINCIPLES_ADHERENCE = "se_principles_adherence"
+    IMPLEMENTATION_DETAILS = "implementation_details"
+    DEPENDENCY_DEFINITION = "dependency_definition"
+    ERROR_HANDLING = "error_handling"
+    TESTING_STRATEGY = "testing_strategy"
+    ACCEPTANCE_CRITERIA = "acceptance_criteria"
+    QUALITY_GATES_ALIGNMENT = "quality_gates_alignment"
     TASK_STRUCTURE = "task_structure"
     QUALITY_GATES = "quality_gates"
     PRE_EXECUTION_CHECKS = "pre_execution_checks"
@@ -54,6 +86,7 @@ class TaskItem:
 
 
 @dataclass
+@dataclass
 class TaskValidationIssue:
     """Represents a validation issue in task execution."""
 
@@ -66,19 +99,20 @@ class TaskValidationIssue:
 
 
 @dataclass
+@dataclass
 class TaskValidationReport:
     """Complete validation report for task execution."""
 
     file_path: str
-    is_valid: bool
-    is_ready_for_execution: bool
     issues: List[TaskValidationIssue] = field(default_factory=list)
     warnings: List[TaskValidationIssue] = field(default_factory=list)
+    ready_tasks: List[TaskItem] = field(default_factory=list)
+    blocked_tasks: List[TaskItem] = field(default_factory=list)
+    is_valid: bool = True
+    is_ready_for_execution: bool = True
     constitutional_compliance_score: float = 0.0
     environment_readiness_score: float = 0.0
     task_count: int = 0
-    ready_tasks: List[TaskItem] = field(default_factory=list)
-    blocked_tasks: List[TaskItem] = field(default_factory=list)
 
     def add_issue(self, issue: TaskValidationIssue):
         """Add a validation issue."""
@@ -95,7 +129,9 @@ class TaskValidator:
 
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the task validator."""
-        self.constitutional_validator = ConstitutionalValidator(config_path)
+        # Use default path if None provided
+        effective_config_path = config_path or ".kittify/config/se_rules.yaml"
+        self.constitutional_validator = ConstitutionalValidator(effective_config_path)
         self.config = self._load_config(config_path)
 
         # Required constitutional checklist items for tasks
@@ -144,7 +180,7 @@ class TaskValidator:
             }
         }
 
-    def validate_tasks(self, tasks_path: str) -> TaskValidationReport:
+    def validate_task(self, tasks_path: str) -> TaskValidationReport:
         """Validate task document and execution environment for constitutional compliance."""
         report = TaskValidationReport(file_path=tasks_path, is_ready_for_execution=True)
 
@@ -588,7 +624,7 @@ class TaskValidator:
         self, task_id: str, tasks_path: str
     ) -> TaskValidationReport:
         """Validate a single task for execution readiness."""
-        full_report = self.validate_tasks(tasks_path)
+        full_report = self.validate_task(tasks_path)
 
         # Filter for specific task
         task_report = TaskValidationReport(
@@ -763,7 +799,7 @@ def main():
     if args.task_id:
         report = validator.validate_single_task(args.task_id, args.tasks)
     else:
-        report = validator.validate_tasks(args.tasks)
+        report = validator.validate_task(args.tasks)
 
     print(validator.format_report(report, args.format))
 

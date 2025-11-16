@@ -15,8 +15,15 @@ from pathlib import Path
 from dataclasses import dataclass
 from enum import Enum
 
-from .compliance_reporter import ComplianceReport, Violation
-from .violation_detector import ViolationDetector
+try:
+    from .compliance_reporter import ComplianceReport, Violation
+    from .violation_detector import ViolationDetector
+    from .quality_gates import QualityGateValidator
+except ImportError:
+    # Fallback for direct execution
+    from compliance_reporter import ComplianceReport, Violation
+    from violation_detector import ViolationDetector
+    from quality_gates import QualityGateValidator
 
 
 class ValidationScope(Enum):
@@ -70,16 +77,35 @@ class ConstitutionalValidator:
             if os.path.exists(self.config_path):
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     self.se_rules = yaml.safe_load(f) or {}
+            else:
+                # Use default configuration if file doesn't exist
+                self._load_default_configuration()
+                return
 
             # Load quality gate configuration
             quality_gates_path = ".kittify/config/quality_gates.yaml"
             if os.path.exists(quality_gates_path):
                 with open(quality_gates_path, "r", encoding="utf-8") as f:
                     self.quality_gates = yaml.safe_load(f) or {}
+            else:
+                # Set default quality gates if file doesn't exist
+                self.quality_gates = {
+                    "coverage": {"unit_test_threshold": 0.8},
+                    "complexity": {"cyclomatic_max": 10},
+                    "security": {"vulnerability_scan": True},
+                    "naming_conventions": {
+                        "rest_api": "kebab-case",
+                        "python_code": "snake_case",
+                        "typescript_code": "camelCase",
+                    },
+                }
 
-        except Exception as e:
+        except (yaml.YAMLError, FileNotFoundError, PermissionError) as e:
             print(f"Warning: Failed to load configuration: {e}")
             # Use default minimal configuration
+            self._load_default_configuration()
+        except Exception as e:
+            print(f"Unexpected error loading configuration: {e}")
             self._load_default_configuration()
 
     def _load_default_configuration(self) -> None:
@@ -162,8 +188,18 @@ class ConstitutionalValidator:
                     self._validate_security(file_path, file_content, file_ext)
                 )
 
+        except (FileNotFoundError, PermissionError, UnicodeDecodeError) as e:
+            return self._create_error_report(file_path, f"File access error: {str(e)}")
+        except (yaml.YAMLError, json.JSONDecodeError) as e:
+            return self._create_error_report(file_path, f"File parsing error: {str(e)}")
+        except (SyntaxError, ValueError) as e:
+            return self._create_error_report(
+                file_path, f"Code analysis error: {str(e)}"
+            )
         except Exception as e:
-            return self._create_error_report(file_path, f"Validation error: {str(e)}")
+            return self._create_error_report(
+                file_path, f"Unexpected validation error: {str(e)}"
+            )
 
         # Generate compliance report
         return self._create_compliance_report(file_path, violations, validation_scope)
@@ -247,7 +283,7 @@ class ConstitutionalValidator:
 
         # Complexity validation
         complexity_violations = self.violation_detector.detect_complexity_violations(
-            content, file_ext, file_path
+            content, file_path
         )
         violations.extend(complexity_violations)
 
@@ -283,7 +319,7 @@ class ConstitutionalValidator:
         self, file_path: str, violations: List[Violation], validation_scope: List[str]
     ) -> ComplianceReport:
         """Create a compliance report from validation results."""
-        from .compliance_reporter import ComplianceReport
+        # ComplianceReport already imported at module level
 
         # Determine overall compliance status
         error_count = len([v for v in violations if v.severity == "ERROR"])
@@ -331,7 +367,7 @@ class ConstitutionalValidator:
         self, file_path: str, error_message: str
     ) -> ComplianceReport:
         """Create an error compliance report."""
-        from .compliance_reporter import ComplianceReport, Violation
+        # ComplianceReport and Violation already imported at module level
 
         error_violation = Violation(
             principle="ValidationError",

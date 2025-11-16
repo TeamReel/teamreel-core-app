@@ -16,12 +16,36 @@ from typing import Dict, List, Optional, Union, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 
-from constitutional_validator import (
-    ConstitutionalValidator,
-    ValidationResult,
-    ValidationLevel,
-    SEPrinciple,
-)
+try:
+    from .constitutional_validator import ConstitutionalValidator, ValidationScope
+    from .compliance_reporter import ComplianceReport, Violation
+    from .violation_detector import ViolationDetector, ViolationType, DetectedViolation
+except ImportError:
+    # Fallback for direct execution
+    from constitutional_validator import ConstitutionalValidator, ValidationScope
+    from compliance_reporter import ComplianceReport, Violation
+    from violation_detector import ViolationDetector, ViolationType, DetectedViolation
+
+
+class ValidationLevel(Enum):
+    """Validation severity levels for specification validation"""
+
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
+
+
+class SEPrinciple(Enum):
+    """Software Engineering Principles"""
+
+    SRP = "single_responsibility_principle"
+    ENCAPSULATION = "encapsulation"
+    LOOSE_COUPLING = "loose_coupling"
+    REUSABILITY = "reusability"
+    PORTABILITY = "portability"
+    DEFENSIBILITY = "defensibility"
+    MAINTAINABILITY = "maintainability"
+    SIMPLICITY = "simplicity"
 
 
 class SpecValidationCategory(Enum):
@@ -49,6 +73,7 @@ class SpecSection:
 
 
 @dataclass
+@dataclass
 class SpecValidationIssue:
     """Represents a validation issue in a specification."""
 
@@ -61,15 +86,16 @@ class SpecValidationIssue:
 
 
 @dataclass
+@dataclass
 class SpecValidationReport:
     """Complete validation report for a specification."""
 
     file_path: str
-    is_valid: bool
     issues: List[SpecValidationIssue] = field(default_factory=list)
     warnings: List[SpecValidationIssue] = field(default_factory=list)
-    constitutional_compliance_score: float = 0.0
     missing_sections: List[str] = field(default_factory=list)
+    is_valid: bool = True
+    constitutional_compliance_score: float = 0.0
 
     def add_issue(self, issue: SpecValidationIssue):
         """Add a validation issue."""
@@ -85,7 +111,9 @@ class SpecValidator:
 
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the spec validator."""
-        self.constitutional_validator = ConstitutionalValidator(config_path)
+        # Use default path if None provided
+        effective_config_path = config_path or ".kittify/config/se_rules.yaml"
+        self.constitutional_validator = ConstitutionalValidator(effective_config_path)
         self.config = self._load_config(config_path)
 
         # Required sections for TeamReel specifications
@@ -113,8 +141,12 @@ class SpecValidator:
     def _load_config(self, config_path: Optional[str]) -> Dict:
         """Load validation configuration."""
         if config_path and Path(config_path).exists():
-            with open(config_path, "r") as f:
-                return yaml.safe_load(f)
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    return yaml.safe_load(f) or {}
+            except (yaml.YAMLError, FileNotFoundError, PermissionError) as e:
+                print(f"Warning: Failed to load config from {config_path}: {e}")
+                # Fall through to default config
 
         # Default configuration
         return {
@@ -129,7 +161,7 @@ class SpecValidator:
             }
         }
 
-    def validate_specification(self, spec_path: str) -> SpecValidationReport:
+    def validate_spec(self, spec_path: str) -> SpecValidationReport:
         """Validate a specification document for constitutional compliance."""
         report = SpecValidationReport(file_path=spec_path)
 
@@ -504,7 +536,7 @@ class SpecValidator:
         results = {}
         for spec_path in spec_paths:
             try:
-                results[spec_path] = self.validate_specification(spec_path)
+                results[spec_path] = self.validate_spec(spec_path)
             except Exception as e:
                 report = SpecValidationReport(file_path=spec_path, is_valid=False)
                 report.add_issue(
@@ -622,7 +654,7 @@ def main():
 
     all_valid = True
     for spec_path in args.specs:
-        report = validator.validate_specification(spec_path)
+        report = validator.validate_spec(spec_path)
         print(validator.format_report(report, args.format))
 
         if not report.is_valid:

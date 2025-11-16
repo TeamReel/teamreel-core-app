@@ -16,12 +16,36 @@ from typing import Dict, List, Optional, Union, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 
-from constitutional_validator import (
-    ConstitutionalValidator,
-    ValidationResult,
-    ValidationLevel,
-    SEPrinciple,
-)
+try:
+    from .constitutional_validator import ConstitutionalValidator, ValidationScope
+    from .compliance_reporter import ComplianceReport, Violation
+    from .violation_detector import ViolationDetector, ViolationType, DetectedViolation
+except ImportError:
+    # Fallback for direct execution
+    from constitutional_validator import ConstitutionalValidator, ValidationScope
+    from compliance_reporter import ComplianceReport, Violation
+    from violation_detector import ViolationDetector, ViolationType, DetectedViolation
+
+
+class ValidationLevel(Enum):
+    """Validation severity levels for plan validation"""
+
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
+
+
+class SEPrinciple(Enum):
+    """Software Engineering Principles"""
+
+    SRP = "single_responsibility_principle"
+    ENCAPSULATION = "encapsulation"
+    LOOSE_COUPLING = "loose_coupling"
+    REUSABILITY = "reusability"
+    PORTABILITY = "portability"
+    DEFENSIBILITY = "defensibility"
+    MAINTAINABILITY = "maintainability"
+    SIMPLICITY = "simplicity"
 
 
 class PlanValidationCategory(Enum):
@@ -29,6 +53,10 @@ class PlanValidationCategory(Enum):
 
     ARCHITECTURE_DESIGN = "architecture_design"
     SE_PRINCIPLES_COMPLIANCE = "se_principles_compliance"
+    COMPONENT_DEFINITION = "component_definition"
+    INTERFACE_CONTRACTS = "interface_contracts"
+    QUALITY_GATES_INTEGRATION = "quality_gates_integration"
+    TASK_BREAKDOWN = "task_breakdown"
     QUALITY_GATES = "quality_gates"
     IMPLEMENTATION_APPROACH = "implementation_approach"
     DEPENDENCY_MANAGEMENT = "dependency_management"
@@ -50,6 +78,7 @@ class PlanSection:
 
 
 @dataclass
+@dataclass
 class PlanValidationIssue:
     """Represents a validation issue in an implementation plan."""
 
@@ -62,16 +91,17 @@ class PlanValidationIssue:
 
 
 @dataclass
+@dataclass
 class PlanValidationReport:
     """Complete validation report for an implementation plan."""
 
     file_path: str
-    is_valid: bool
     issues: List[PlanValidationIssue] = field(default_factory=list)
     warnings: List[PlanValidationIssue] = field(default_factory=list)
+    missing_sections: List[str] = field(default_factory=list)
+    is_valid: bool = True
     constitutional_compliance_score: float = 0.0
     architecture_completeness_score: float = 0.0
-    missing_sections: List[str] = field(default_factory=list)
 
     def add_issue(self, issue: PlanValidationIssue):
         """Add a validation issue."""
@@ -87,7 +117,9 @@ class PlanValidator:
 
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the plan validator."""
-        self.constitutional_validator = ConstitutionalValidator(config_path)
+        # Use default path if None provided
+        effective_config_path = config_path or ".kittify/config/se_rules.yaml"
+        self.constitutional_validator = ConstitutionalValidator(effective_config_path)
         self.config = self._load_config(config_path)
 
         # Required sections for TeamReel implementation plans

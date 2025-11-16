@@ -18,7 +18,12 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
 from dataclasses import dataclass
 from enum import Enum
-import esprima  # JavaScript/TypeScript AST parsing
+
+try:
+    from .compliance_reporter import Violation
+except ImportError:
+    # Fallback for direct execution
+    from compliance_reporter import Violation
 
 
 class ViolationType(Enum):
@@ -838,6 +843,387 @@ class ViolationDetector:
     def is_supported_file(self, file_path: str) -> bool:
         """Check if a file type is supported for analysis"""
         return Path(file_path).suffix.lower() in self.supported_extensions
+
+    # Individual SE principle detection methods for constitutional validator integration
+    def detect_srp_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Single Responsibility Principle violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            srp_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.SRP_VIOLATION
+            ]
+
+            # Convert to Violation objects
+            violations = []
+            for dv in srp_violations:
+                violations.append(
+                    Violation(
+                        principle="SRP",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="SRP",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="SRP-ERROR",
+                )
+            ]
+
+    def detect_encapsulation_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Encapsulation violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            enc_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.ENCAPSULATION_VIOLATION
+            ]
+
+            violations = []
+            for dv in enc_violations:
+                violations.append(
+                    Violation(
+                        principle="Encapsulation",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="Encapsulation",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="ENC-ERROR",
+                )
+            ]
+
+    def detect_coupling_violations(
+        self, file_path: str, content: str
+    ) -> List[Violation]:
+        """Detect Loose Coupling violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            coupling_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.LOOSE_COUPLING_VIOLATION
+            ]
+
+            violations = []
+            for dv in coupling_violations:
+                violations.append(
+                    Violation(
+                        principle="LooseCoupling",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="LooseCoupling",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="LC-ERROR",
+                )
+            ]
+
+    def detect_reusability_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Reusability violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            reuse_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.REUSABILITY_VIOLATION
+            ]
+
+            violations = []
+            for dv in reuse_violations:
+                violations.append(
+                    Violation(
+                        principle="Reusability",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="Reusability",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="REU-ERROR",
+                )
+            ]
+
+    def detect_portability_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Portability violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            port_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.PORTABILITY_VIOLATION
+            ]
+
+            violations = []
+            for dv in port_violations:
+                violations.append(
+                    Violation(
+                        principle="Portability",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="Portability",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="PORT-ERROR",
+                )
+            ]
+
+    def detect_defensibility_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Defensibility violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            def_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.DEFENSIBILITY_VIOLATION
+            ]
+
+            violations = []
+            for dv in def_violations:
+                violations.append(
+                    Violation(
+                        principle="Defensibility",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="Defensibility",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="DEF-ERROR",
+                )
+            ]
+
+    def detect_maintainability_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Maintainability violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            maint_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.MAINTAINABILITY_VIOLATION
+            ]
+
+            violations = []
+            for dv in maint_violations:
+                violations.append(
+                    Violation(
+                        principle="Maintainability",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="Maintainability",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="MAINT-ERROR",
+                )
+            ]
+
+    def detect_simplicity_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect Simplicity violations"""
+        try:
+            detected_violations = self.detect_violations(file_path, content)
+            simp_violations = [
+                v
+                for v in detected_violations
+                if v.violation_type == ViolationType.SIMPLICITY_VIOLATION
+            ]
+
+            violations = []
+            for dv in simp_violations:
+                violations.append(
+                    Violation(
+                        principle="Simplicity",
+                        severity=dv.severity,
+                        message=dv.description,
+                        file_path=file_path,
+                        line_number=dv.line_number,
+                        suggested_fix=dv.suggested_fix,
+                        rule_id=dv.rule_id,
+                    )
+                )
+            return violations
+        except Exception as e:
+            return [
+                Violation(
+                    principle="Simplicity",
+                    severity="ERROR",
+                    message=f"Analysis failed: {str(e)}",
+                    file_path=file_path,
+                    rule_id="SIMP-ERROR",
+                )
+            ]
+
+    def detect_complexity_violations(
+        self, content: str, file_path: str
+    ) -> List[Violation]:
+        """Detect complexity violations"""
+        violations = []
+        lines = content.split("\n")
+
+        # Basic complexity detection - count nested loops and conditions
+        for i, line in enumerate(lines, 1):
+            stripped = line.strip()
+            indent_level = len(line) - len(line.lstrip())
+
+            # High nesting level indicates complexity
+            if indent_level > 24:  # More than 6 levels of 4-space indentation
+                violations.append(
+                    Violation(
+                        principle="Simplicity",
+                        severity="WARNING",
+                        message="Excessive nesting depth indicates high complexity",
+                        file_path=file_path,
+                        line_number=i,
+                        suggested_fix="Consider refactoring to reduce nesting depth",
+                        rule_id="COMPLEX-001",
+                    )
+                )
+
+        return violations
+
+    def detect_naming_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect naming convention violations"""
+        violations = []
+        lines = content.split("\n")
+
+        # Basic naming pattern checks
+        for i, line in enumerate(lines, 1):
+            # Check for camelCase in Python files (should be snake_case)
+            if file_ext == ".py" and re.search(r"def [a-z]+[A-Z]", line):
+                violations.append(
+                    Violation(
+                        principle="Maintainability",
+                        severity="WARNING",
+                        message="Function name should use snake_case in Python",
+                        file_path=file_path,
+                        line_number=i,
+                        suggested_fix="Use snake_case for function names",
+                        rule_id="NAME-001",
+                    )
+                )
+
+        return violations
+
+    def detect_security_violations(
+        self, content: str, file_ext: str, file_path: str
+    ) -> List[Violation]:
+        """Detect security-related violations"""
+        violations = []
+        lines = content.split("\n")
+
+        security_patterns = [
+            (r'password\s*=\s*["\'][^"\']+["\']', "Hardcoded password detected"),
+            (r'api_key\s*=\s*["\'][^"\']+["\']', "Hardcoded API key detected"),
+            (r'secret\s*=\s*["\'][^"\']+["\']', "Hardcoded secret detected"),
+        ]
+
+        for i, line in enumerate(lines, 1):
+            for pattern, message in security_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    violations.append(
+                        Violation(
+                            principle="Defensibility",
+                            severity="HIGH",
+                            message=message,
+                            file_path=file_path,
+                            line_number=i,
+                            suggested_fix="Move sensitive values to environment variables",
+                            rule_id="SEC-001",
+                        )
+                    )
+
+        return violations
 
 
 # Factory function for easy instantiation

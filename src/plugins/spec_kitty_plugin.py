@@ -20,6 +20,18 @@ from enum import Enum
 import subprocess
 import yaml
 
+# Import validators for plugin integration
+try:
+    from ..spec_validator import SpecValidator
+    from ..plan_validator import PlanValidator
+    from ..task_validator import TaskValidator
+except ImportError:
+    # Fallback for testing or direct execution
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from spec_validator import SpecValidator
+    from plan_validator import PlanValidator
+    from task_validator import TaskValidator
+
 
 class SpecKittyStage(Enum):
     """Spec-kitty workflow stages for constitutional validation"""
@@ -54,6 +66,11 @@ class ValidationResult:
 
 class SpecKittyConstitutionalPlugin:
     """Main plugin class for spec-kitty constitutional integration"""
+
+    # Plugin metadata
+    name = "constitutional-validation"
+    version = "1.0.0"
+    description = "Constitutional validation integration for spec-kitty workflow"
 
     def __init__(self, feature_dir: str = None, config_path: str = None):
         self.feature_dir = (
@@ -665,6 +682,19 @@ class SpecKittyConstitutionalPlugin:
         return "\n".join(lines)
 
     # CLI Command Integration
+
+    # Plugin hook methods for spec-kitty integration
+    def on_spec_created(self, spec_path: str) -> ValidationResult:
+        """Hook called when a new specification is created."""
+        return self.hook_specify_validate(spec_path)
+
+    def on_plan_created(self, plan_path: str) -> ValidationResult:
+        """Hook called when a new implementation plan is created."""
+        return self.hook_plan_validate(plan_path)
+
+    def on_task_created(self, task_path: str) -> ValidationResult:
+        """Hook called when new tasks are created."""
+        return self.hook_tasks_validate(task_path)
 
     def cli_validate_workflow_stage(self, stage: str, file_path: str) -> int:
         """CLI entry point for workflow stage validation"""

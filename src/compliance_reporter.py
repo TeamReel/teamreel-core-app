@@ -235,6 +235,22 @@ class ComplianceReport:
 
         return grouped
 
+    def get_violations_by_severity(self) -> Dict[str, List[Violation]]:
+        """
+        Group violations by severity level.
+
+        Returns:
+            Dictionary mapping severity levels to lists of violations
+        """
+        grouped = {}
+
+        for violation in self.violations:
+            if violation.severity not in grouped:
+                grouped[violation.severity] = []
+            grouped[violation.severity].append(violation)
+
+        return grouped
+
     def get_compliance_percentage(self) -> float:
         """
         Calculate overall compliance percentage.
