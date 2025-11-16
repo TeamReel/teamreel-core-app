@@ -23,7 +23,7 @@ from compliance_reporter import ComplianceReport, Violation
 @dataclass
 class ValidationResult:
     """Represents validation results for a single file or component."""
-    
+
     file_path: str
     is_valid: bool
     violations: List[Violation] = field(default_factory=list)

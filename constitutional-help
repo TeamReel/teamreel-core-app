@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""
+Constitutional Help CLI
+
+Simple command-line interface for the constitutional help system.
+"""
+
+import sys
+from pathlib import Path
+
+# Add src to path to import help_system
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+from help_system import ConstitutionalHelpSystem
+
+def main():
+    """Main CLI entry point."""
+    help_system = ConstitutionalHelpSystem()
+    
+    if len(sys.argv) == 1:
+        # No arguments - show general help
+        print(help_system.show_help())
+    elif sys.argv[1] == "principles":
+        # List all principles
+        print(help_system.list_principles())
+    elif sys.argv[1] == "search" and len(sys.argv) > 2:
+        # Search help content
+        query = " ".join(sys.argv[2:])
+        print(help_system.search_help(query))
+    else:
+        # Show help for specific topic
+        topic = sys.argv[1]
+        print(help_system.show_help(topic))
+
+if __name__ == "__main__":
+    main()
