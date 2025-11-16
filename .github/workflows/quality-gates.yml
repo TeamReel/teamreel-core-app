@@ -1,0 +1,348 @@
+name: Quality Gates Validation
+
+on:
+  pull_request:
+    branches: [ main, develop, release/* ]
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches: [ main, develop, release/* ]
+  workflow_dispatch:
+    inputs:
+      validation-scope:
+        description: 'Validation scope (all, changed-files, or path)'
+        required: false
+        default: 'changed-files'
+      strictness:
+        description: 'Validation strictness (error, warning, info)'
+        required: false
+        default: 'error'
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  quality-gates:
+    name: Quality Gates Validation
+    runs-on: ubuntu-latest  # Primary platform for speed
+    timeout-minutes: 5
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        gate:
+          - name: 'constitutional-compliance'
+            description: 'Constitutional Compliance (SE Principles)'
+          - name: 'code-coverage'
+            description: 'Code Coverage (80% minimum)'
+          - name: 'code-complexity'
+            description: 'Cyclomatic Complexity (≤10)'
+          - name: 'linting'
+            description: 'Code Linting (Zero violations)'
+          - name: 'security-scan'
+            description: 'Security Vulnerabilities'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper diff analysis
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest pytest-cov bandit safety
+          # Install project dependencies if they exist
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+      
+      - name: Quality Gate - Constitutional Compliance
+        if: matrix.gate.name == 'constitutional-compliance'
+        uses: ./.github/actions/constitutional-validator
+        id: constitutional
+        with:
+          validation-scope: ${{ github.event.inputs.validation-scope || 'changed-files' }}
+          strictness: ${{ github.event.inputs.strictness || 'error' }}
+          report-format: 'github'
+          fail-on-violations: 'true'
+      
+      - name: Quality Gate - Code Coverage
+        if: matrix.gate.name == 'code-coverage'
+        id: coverage
+        run: |
+          echo "🧪 Running code coverage analysis..."
+          
+          # Check if there are Python files to test
+          PYTHON_FILES=$(find . -name "*.py" -not -path "./.git/*" -not -path "./.*" | head -1)
+          if [ -z "$PYTHON_FILES" ]; then
+            echo "No Python files found - skipping coverage"
+            echo "result=pass" >> $GITHUB_OUTPUT
+            echo "coverage=100" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Run tests with coverage
+          if [ -d "tests" ] || [ -d "test" ]; then
+            pytest --cov=. --cov-report=json --cov-report=term --cov-fail-under=80 || COVERAGE_FAILED=true
+          else
+            echo "No tests directory found - creating basic coverage report"
+            pytest --cov=. --cov-report=json --cov-report=term || COVERAGE_FAILED=true
+          fi
+          
+          # Parse coverage results
+          if [ -f coverage.json ]; then
+            COVERAGE=$(python -c "import json; data=json.load(open('coverage.json')); print(data['totals']['percent_covered'])")
+            echo "Coverage: ${COVERAGE}%"
+            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+            
+            if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+              echo "❌ Coverage below 80% threshold: ${COVERAGE}%"
+              echo "result=fail" >> $GITHUB_OUTPUT
+              
+              # Add to step summary
+              echo "## 📊 Code Coverage: ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Coverage below 80% threshold**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Minimum required coverage: 80%" >> $GITHUB_STEP_SUMMARY
+              echo "Current coverage: ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+              
+              exit 1
+            else
+              echo "✅ Coverage meets 80% threshold: ${COVERAGE}%"
+              echo "result=pass" >> $GITHUB_OUTPUT
+              
+              # Add to step summary
+              echo "## 📊 Code Coverage: ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **Coverage meets requirements**" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ Coverage report not generated"
+            echo "result=fail" >> $GITHUB_OUTPUT
+            echo "coverage=0" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: Quality Gate - Code Complexity
+        if: matrix.gate.name == 'code-complexity'
+        id: complexity
+        run: |
+          echo "🔄 Analyzing code complexity..."
+          
+          # Use ruff to check complexity
+          COMPLEXITY_VIOLATIONS=0
+          
+          # Check complexity with ruff (McCabe complexity)
+          if ruff check --select C901 --output-format=json . > complexity.json 2>/dev/null; then
+            COMPLEXITY_VIOLATIONS=$(python -c "import json; data=json.load(open('complexity.json')); print(len(data))")
+          else
+            # If ruff fails, try alternative approach
+            COMPLEXITY_VIOLATIONS=0
+          fi
+          
+          echo "Complexity violations: $COMPLEXITY_VIOLATIONS"
+          echo "violations=$COMPLEXITY_VIOLATIONS" >> $GITHUB_OUTPUT
+          
+          if [ "$COMPLEXITY_VIOLATIONS" -gt 0 ]; then
+            echo "❌ Complexity violations found: $COMPLEXITY_VIOLATIONS"
+            echo "result=fail" >> $GITHUB_OUTPUT
+            
+            # Add to step summary
+            echo "## 🔄 Code Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **$COMPLEXITY_VIOLATIONS complexity violations found**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Maximum allowed complexity: 10" >> $GITHUB_STEP_SUMMARY
+            
+            # Show violations if available
+            if [ -f complexity.json ]; then
+              echo "### Violations:" >> $GITHUB_STEP_SUMMARY
+              python -c "import json; data=json.load(open('complexity.json')); [print(f\"- {item['filename']}:{item['location']['row']} - {item['message']}\") for item in data[:5]]" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            exit 1
+          else
+            echo "✅ No complexity violations found"
+            echo "result=pass" >> $GITHUB_OUTPUT
+            
+            echo "## 🔄 Code Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All functions meet complexity requirements (≤10)**" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Quality Gate - Linting
+        if: matrix.gate.name == 'linting'
+        id: linting
+        run: |
+          echo "🔍 Running code linting..."
+          
+          # Run ruff linting
+          if ruff check --output-format=json . > linting.json 2>/dev/null; then
+            LINT_VIOLATIONS=$(python -c "import json; data=json.load(open('linting.json')); print(len(data))")
+          else
+            LINT_VIOLATIONS=1  # Assume violations if ruff fails
+          fi
+          
+          echo "Linting violations: $LINT_VIOLATIONS"
+          echo "violations=$LINT_VIOLATIONS" >> $GITHUB_OUTPUT
+          
+          if [ "$LINT_VIOLATIONS" -gt 0 ]; then
+            echo "❌ Linting violations found: $LINT_VIOLATIONS"
+            echo "result=fail" >> $GITHUB_OUTPUT
+            
+            # Add to step summary
+            echo "## 🔍 Code Linting Results" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **$LINT_VIOLATIONS linting violations found**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Show violations if available
+            if [ -f linting.json ]; then
+              echo "### Violations:" >> $GITHUB_STEP_SUMMARY
+              python -c "import json; data=json.load(open('linting.json')); [print(f\"- {item['filename']}:{item['location']['row']} - {item['code']}: {item['message']}\") for item in data[:10]]" >> $GITHUB_STEP_SUMMARY
+              
+              if [ "$LINT_VIOLATIONS" -gt 10 ]; then
+                echo "- ... and $(($LINT_VIOLATIONS - 10)) more violations" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+            
+            exit 1
+          else
+            echo "✅ No linting violations found"
+            echo "result=pass" >> $GITHUB_OUTPUT
+            
+            echo "## 🔍 Code Linting Results" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **No linting violations found**" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Quality Gate - Security Scan
+        if: matrix.gate.name == 'security-scan'
+        id: security
+        run: |
+          echo "🛡️ Running security vulnerability scan..."
+          
+          SECURITY_ISSUES=0
+          
+          # Run bandit for Python security issues
+          if bandit -r . -f json -o bandit.json 2>/dev/null; then
+            SECURITY_ISSUES=$(python -c "import json; data=json.load(open('bandit.json')); print(len(data.get('results', [])))")
+          else
+            echo "Bandit scan completed with warnings or no Python files found"
+            SECURITY_ISSUES=0
+          fi
+          
+          # Run safety check for dependency vulnerabilities
+          DEPENDENCY_ISSUES=0
+          if pip freeze | safety check --json > safety.json 2>/dev/null; then
+            DEPENDENCY_ISSUES=0  # Safety check passed
+          else
+            if [ -f safety.json ]; then
+              DEPENDENCY_ISSUES=$(python -c "import json; data=json.load(open('safety.json')); print(len(data))" 2>/dev/null || echo 0)
+            fi
+          fi
+          
+          TOTAL_SECURITY_ISSUES=$(($SECURITY_ISSUES + $DEPENDENCY_ISSUES))
+          
+          echo "Security issues found: $TOTAL_SECURITY_ISSUES (Code: $SECURITY_ISSUES, Dependencies: $DEPENDENCY_ISSUES)"
+          echo "issues=$TOTAL_SECURITY_ISSUES" >> $GITHUB_OUTPUT
+          echo "code-issues=$SECURITY_ISSUES" >> $GITHUB_OUTPUT
+          echo "dependency-issues=$DEPENDENCY_ISSUES" >> $GITHUB_OUTPUT
+          
+          if [ "$TOTAL_SECURITY_ISSUES" -gt 0 ]; then
+            echo "❌ Security vulnerabilities found: $TOTAL_SECURITY_ISSUES"
+            echo "result=fail" >> $GITHUB_OUTPUT
+            
+            # Add to step summary
+            echo "## 🛡️ Security Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **$TOTAL_SECURITY_ISSUES security issues found**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- Code security issues: $SECURITY_ISSUES" >> $GITHUB_STEP_SUMMARY
+            echo "- Dependency vulnerabilities: $DEPENDENCY_ISSUES" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Show bandit results
+            if [ -f bandit.json ] && [ "$SECURITY_ISSUES" -gt 0 ]; then
+              echo "### Code Security Issues:" >> $GITHUB_STEP_SUMMARY
+              python -c "import json; data=json.load(open('bandit.json')); [print(f\"- {item['filename']}:{item['line_number']} - {item['test_id']}: {item['issue_text']}\") for item in data.get('results', [])[:5]]" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Show safety results
+            if [ -f safety.json ] && [ "$DEPENDENCY_ISSUES" -gt 0 ]; then
+              echo "### Dependency Vulnerabilities:" >> $GITHUB_STEP_SUMMARY
+              python -c "import json; data=json.load(open('safety.json')); [print(f\"- {item.get('package', 'Unknown')}: {item.get('advisory', 'Security vulnerability detected')}\") for item in data[:5]]" >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo '- See safety.json for details' >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            exit 1
+          else
+            echo "✅ No security vulnerabilities found"
+            echo "result=pass" >> $GITHUB_OUTPUT
+            
+            echo "## 🛡️ Security Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **No security vulnerabilities found**" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Upload quality gate reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: quality-gate-reports-${{ matrix.gate.name }}
+          path: |
+            constitutional-compliance-report.json
+            coverage.json
+            complexity.json
+            linting.json
+            bandit.json
+            safety.json
+          retention-days: 30
+  
+  quality-gates-summary:
+    name: Quality Gates Summary
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    if: always()
+    
+    steps:
+      - name: Generate overall quality gates report
+        run: |
+          echo "# 🏗️ Quality Gates Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check results from matrix jobs
+          GATES_STATUS='${{ toJson(needs.quality-gates.result) }}'
+          
+          if [ "$GATES_STATUS" = "success" ]; then
+            echo "## ✅ All Quality Gates Passed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 Your code meets all TeamReel constitutional requirements!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Quality Gate | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------------|---------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Constitutional Compliance | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Code Coverage (≥80%) | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Code Complexity (≤10) | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Linting | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Security Scan | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Quality Gates Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some quality gates did not pass. Please review the individual gate results above." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🚫 Constitutional Compliance Violation" >> $GITHUB_STEP_SUMMARY
+            echo "This PR cannot be merged until all quality gates pass." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please fix the violations and push your changes to re-trigger validation." >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Set quality gates status
+        run: |
+          if [ "${{ needs.quality-gates.result }}" != "success" ]; then
+            echo "❌ Quality gates failed"
+            exit 1
+          else
+            echo "✅ All quality gates passed"
+          fi

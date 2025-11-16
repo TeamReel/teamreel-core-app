@@ -1,0 +1,200 @@
+# TeamReel Quality Gate Configuration System
+# Configurable quality gate definitions with hard-blocking thresholds
+# SE Principle Focus: Portability (consistent across environments) and Defensibility (secure defaults)
+
+quality_gates:
+  # Test Coverage Requirements
+  coverage:
+    enabled: true
+    unit_test_threshold: 0.8        # 80% minimum unit test coverage
+    integration_test_threshold: 0.6 # 60% minimum integration test coverage  
+    e2e_test_threshold: 0.4         # 40% minimum end-to-end test coverage
+    exclude_patterns:               # Files/directories to exclude from coverage
+      - "**/migrations/**"
+      - "**/tests/**"
+      - "**/test_*.py"
+      - "**/__pycache__/**"
+      - "**/node_modules/**"
+      - "**/dist/**"
+      - "**/build/**"
+    tools:
+      python: "pytest-cov"
+      javascript: "jest"
+      typescript: "jest"
+    failure_action: "block"         # block, warn, or ignore
+    
+  # Code Complexity Limits
+  complexity:
+    enabled: true
+    cyclomatic_max: 10              # Maximum cyclomatic complexity per function
+    cognitive_max: 15               # Maximum cognitive complexity per function
+    function_length_max: 50         # Maximum lines per function
+    class_length_max: 300           # Maximum lines per class
+    parameter_count_max: 5          # Maximum parameters per function
+    nesting_depth_max: 4            # Maximum nesting depth
+    tools:
+      python: "radon"
+      javascript: "eslint-plugin-complexity"
+      typescript: "typescript-eslint"
+    failure_action: "block"
+    
+  # Security Scanning
+  security:
+    enabled: true
+    vulnerability_scan: true        # Enable vulnerability scanning
+    dependency_audit: true          # Audit dependencies for known vulnerabilities
+    secrets_scan: true              # Scan for accidentally committed secrets
+    allowed_vulnerability_levels:   # Allowed vulnerability severity levels
+      - "LOW"
+      - "MEDIUM"
+    blocked_vulnerability_levels:   # Vulnerability levels that block deployment
+      - "HIGH"
+      - "CRITICAL"
+    tools:
+      python: "bandit"
+      javascript: "eslint-plugin-security"
+      typescript: "eslint-plugin-security"
+    secrets_patterns:               # Patterns for secret detection
+      - "password\\s*=\\s*['\"][^'\"]{8,}"
+      - "api_key\\s*=\\s*['\"][^'\"]{16,}"
+      - "secret\\s*=\\s*['\"][^'\"]{8,}"
+      - "token\\s*=\\s*['\"][^'\"]{16,}"
+    failure_action: "block"
+    
+  # Naming Convention Enforcement  
+  naming_conventions:
+    enabled: true
+    rest_api: "kebab-case"          # REST endpoints: /user-profiles/, /video-workflows/
+    python_code: "snake_case"       # Python: user_profile, video_workflow
+    typescript_code: "camelCase"    # TypeScript: userProfile, videoWorkflow
+    javascript_code: "camelCase"    # JavaScript: userProfile, videoWorkflow
+    constants: "UPPER_SNAKE_CASE"   # Constants: MAX_FILE_SIZE, DEFAULT_TIMEOUT
+    
+    patterns:
+      python:
+        functions: "^[a-z_][a-z0-9_]*$"
+        classes: "^[A-Z][a-zA-Z0-9]*$"
+        variables: "^[a-z_][a-z0-9_]*$"
+        constants: "^[A-Z_][A-Z0-9_]*$"
+        
+      typescript:
+        functions: "^[a-z][a-zA-Z0-9]*$"
+        classes: "^[A-Z][a-zA-Z0-9]*$"
+        variables: "^[a-z][a-zA-Z0-9]*$"
+        constants: "^[A-Z_][A-Z0-9_]*$"
+        interfaces: "^I[A-Z][a-zA-Z0-9]*$"
+        
+      javascript:
+        functions: "^[a-z][a-zA-Z0-9]*$"
+        classes: "^[A-Z][a-zA-Z0-9]*$"
+        variables: "^[a-z][a-zA-Z0-9]*$"
+        constants: "^[A-Z_][A-Z0-9_]*$"
+        
+    failure_action: "warn"          # naming violations are warnings by default
+    
+  # Documentation Requirements
+  documentation:
+    enabled: true
+    docstring_coverage: 0.8         # 80% of functions must have docstrings
+    readme_required: true           # Project must have README.md
+    api_documentation: true         # API endpoints must be documented
+    type_hints_required: true       # Python functions must have type hints
+    failure_action: "warn"
+    
+  # Git and Version Control Requirements
+  git_requirements:
+    enabled: true
+    commit_message_format: "^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?: .{1,50}"
+    branch_naming: "^(feature|bugfix|hotfix|release)\\/[a-z0-9-]+$"
+    max_commits_behind_main: 10     # Branch cannot be more than 10 commits behind main
+    require_pr_reviews: true        # Pull requests must be reviewed
+    failure_action: "warn"
+
+# Environment-specific overrides
+environments:
+  development:
+    quality_gates:
+      coverage:
+        unit_test_threshold: 0.7    # Slightly lower for development
+      security:
+        failure_action: "warn"      # Warnings only in development
+        
+  staging:
+    quality_gates:
+      coverage:
+        unit_test_threshold: 0.8    # Full requirements for staging
+      security:
+        failure_action: "block"     # Block on security issues
+        
+  production:
+    quality_gates:
+      coverage:
+        unit_test_threshold: 0.8    # Full requirements for production
+        integration_test_threshold: 0.7  # Higher integration test requirement
+      security:
+        failure_action: "block"     # Block on any security issues
+        allowed_vulnerability_levels: ["LOW"]  # Only LOW vulnerabilities allowed
+
+# Quality gate execution configuration
+execution:
+  parallel_execution: true          # Run quality gates in parallel for performance
+  timeout_seconds: 300             # Maximum time for all quality gates
+  fail_fast: true                  # Stop on first blocking failure
+  retry_on_failure: false          # Don't retry failed quality gates
+  
+# Reporting configuration
+reporting:
+  generate_html_report: true       # Generate HTML report for quality gates
+  generate_json_report: true       # Generate JSON report for tools
+  generate_junit_xml: true         # Generate JUnit XML for CI/CD integration
+  report_directory: ".kittify/reports/quality-gates"
+  
+# Integration settings
+integration:
+  github_actions:
+    enabled: true
+    status_checks:                 # GitHub status checks to create
+      - "quality-gates/coverage"
+      - "quality-gates/complexity"
+      - "quality-gates/security"
+      - "quality-gates/naming"
+    block_merge_on_failure: true   # Block PR merge if quality gates fail
+    
+  pre_commit_hooks:
+    enabled: true
+    run_on_commit: ["naming_conventions", "security"]  # Quick checks on commit
+    run_on_push: ["coverage", "complexity", "security", "naming_conventions"]  # Full checks on push
+    
+  spec_kitty_integration:
+    enabled: true
+    validate_on_plan: true         # Validate during spec-kitty plan phase
+    validate_on_tasks: true        # Validate during spec-kitty tasks phase
+    block_on_failure: true         # Block spec-kitty workflow progression
+
+# TeamReel-specific quality requirements
+teamreel_standards:
+  constitutional_compliance: true   # Must pass all SE principle validations
+  gdpr_compliance: true            # Must be GDPR compliant
+  no_pii_logging: true             # No personally identifiable information in logs
+  secure_defaults: true            # All configurations must use secure defaults
+  performance_requirements:
+    api_response_time_max: 200     # API responses must be under 200ms
+    ai_workflow_time_max: 3000     # AI workflows must complete under 3 seconds
+    
+# Customization options for teams
+customization:
+  allow_team_overrides: true       # Teams can customize some thresholds
+  override_approval_required: true # Overrides require approval
+  override_audit_trail: true       # Track all customizations
+  
+  overridable_settings:            # Settings teams can customize
+    - "coverage.unit_test_threshold"
+    - "complexity.cyclomatic_max"
+    - "documentation.docstring_coverage"
+    - "naming_conventions.failure_action"
+  
+  non_overridable_settings:        # Settings that cannot be customized
+    - "security.vulnerability_scan"
+    - "security.secrets_scan"
+    - "teamreel_standards.constitutional_compliance"
+    - "teamreel_standards.gdpr_compliance"

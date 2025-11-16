@@ -1,0 +1,188 @@
+name: 'Constitutional Validator'
+description: 'Validates code against TeamReel constitutional requirements (SE principles, quality gates)'
+author: 'TeamReel'
+
+inputs:
+  config-path:
+    description: 'Path to constitutional validation configuration file'
+    required: false
+    default: '.kittify/config/constitutional_validation.yaml'
+  
+  validation-scope:
+    description: 'Scope of validation: all, changed-files, or specific paths'
+    required: false
+    default: 'changed-files'
+  
+  strictness:
+    description: 'Validation strictness level: error, warning, or info'
+    required: false
+    default: 'error'
+  
+  report-format:
+    description: 'Output format: github, json, terminal'
+    required: false
+    default: 'github'
+  
+  fail-on-violations:
+    description: 'Fail the action if constitutional violations are found'
+    required: false
+    default: 'true'
+  
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.11'
+
+outputs:
+  validation-result:
+    description: 'Constitutional validation result (pass/fail)'
+    value: ${{ steps.validate.outputs.result }}
+  
+  compliance-score:
+    description: 'Overall constitutional compliance score (0-100)'
+    value: ${{ steps.validate.outputs.compliance-score }}
+  
+  violations-count:
+    description: 'Total number of constitutional violations found'
+    value: ${{ steps.validate.outputs.violations-count }}
+  
+  report-path:
+    description: 'Path to the generated compliance report'
+    value: ${{ steps.validate.outputs.report-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+    
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml pathlib dataclasses
+        # Install additional dependencies if requirements.txt exists
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+        # Install dev dependencies for linting tools
+        pip install ruff pytest pytest-cov
+    
+    - name: Validate constitutional compliance
+      id: validate
+      shell: bash
+      run: |
+        set -e
+        
+        echo "🏛️ Starting TeamReel Constitutional Validation"
+        echo "Configuration: ${{ inputs.config-path }}"
+        echo "Scope: ${{ inputs.validation-scope }}"
+        echo "Strictness: ${{ inputs.strictness }}"
+        
+        # Check if constitutional validator exists
+        if [ ! -f "src/constitutional_validator.py" ]; then
+          echo "❌ Constitutional validator not found at src/constitutional_validator.py"
+          echo "This action requires the constitutional validation engine from WP01"
+          exit 1
+        fi
+        
+        # Determine files to validate based on scope
+        FILES_TO_VALIDATE=""
+        if [ "${{ inputs.validation-scope }}" = "all" ]; then
+          FILES_TO_VALIDATE=$(find . -name "*.py" -not -path "./.git/*" -not -path "./.*" | head -100)
+        elif [ "${{ inputs.validation-scope }}" = "changed-files" ]; then
+          # Get changed files from git (PR context)
+          if [ -n "$GITHUB_BASE_REF" ]; then
+            FILES_TO_VALIDATE=$(git diff --name-only origin/$GITHUB_BASE_REF...HEAD | grep "\.py$" || echo "")
+          else
+            # Fallback to recent changes
+            FILES_TO_VALIDATE=$(git diff --name-only HEAD~1 | grep "\.py$" || echo "")
+          fi
+        else
+          FILES_TO_VALIDATE="${{ inputs.validation-scope }}"
+        fi
+        
+        echo "Files to validate:"
+        echo "$FILES_TO_VALIDATE"
+        
+        # Run constitutional validation
+        VALIDATION_RESULT="pass"
+        COMPLIANCE_SCORE=100
+        VIOLATIONS_COUNT=0
+        REPORT_PATH="constitutional-compliance-report.json"
+        
+        if [ -n "$FILES_TO_VALIDATE" ]; then
+          echo "🔍 Running constitutional validation..."
+          
+          # Check if constitutional validator exists
+          if [ ! -f "src/constitutional_validator.py" ]; then
+            echo "❌ Constitutional validator not found at src/constitutional_validator.py"
+            echo "This action requires the constitutional validation engine from WP01"
+            exit 1
+          fi
+          
+          # Create simple validation script
+          echo "Files to validate: $FILES_TO_VALIDATE"
+          echo "$FILES_TO_VALIDATE" > files_to_check.txt
+          
+          # Run constitutional validation using existing CLI
+          python src/constitutional_validator.py --files files_to_check.txt --config "${{ inputs.config-path }}" --format json --output "${{ inputs.report-path }}" || VALIDATION_FAILED=true
+          
+          # Parse results from report file
+          if [ -f "${{ inputs.report-path }}" ]; then
+            VALIDATION_RESULT=$(python -c "import json; data=json.load(open('${{ inputs.report-path }}')); print(data.get('validation_result', 'fail'))")
+            COMPLIANCE_SCORE=$(python -c "import json; data=json.load(open('${{ inputs.report-path }}')); print(data.get('compliance_score', 0))")
+            VIOLATIONS_COUNT=$(python -c "import json; data=json.load(open('${{ inputs.report-path }}')); print(data.get('violations_count', 0))")
+          else
+            echo "❌ Constitutional validation report not generated"
+            VALIDATION_RESULT="fail"
+            COMPLIANCE_SCORE=0
+            VIOLATIONS_COUNT=1
+          fi
+          
+          # Parse outputs
+          if grep -q "result=" validation_output.txt; then
+            VALIDATION_RESULT=$(grep "result=" validation_output.txt | cut -d'=' -f2)
+            COMPLIANCE_SCORE=$(grep "compliance-score=" validation_output.txt | cut -d'=' -f2)
+            VIOLATIONS_COUNT=$(grep "violations-count=" validation_output.txt | cut -d'=' -f2)
+            REPORT_PATH=$(grep "report-path=" validation_output.txt | cut -d'=' -f2)
+          fi
+          
+          # Show output
+          cat validation_output.txt
+          
+        else
+          echo "No files to validate - skipping constitutional validation"
+        fi
+        
+        # Set outputs
+        echo "result=$VALIDATION_RESULT" >> $GITHUB_OUTPUT
+        echo "compliance-score=$COMPLIANCE_SCORE" >> $GITHUB_OUTPUT
+        echo "violations-count=$VIOLATIONS_COUNT" >> $GITHUB_OUTPUT  
+        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
+        
+        # Generate GitHub-formatted report if requested
+        if [ "${{ inputs.report-format }}" = "github" ] && [ -f "$REPORT_PATH" ]; then
+          echo "📊 Generating GitHub status report..."
+          
+          # Use github_reporter.py if available for better formatting
+          if [ -f "src/github_reporter.py" ]; then
+            python src/github_reporter.py --validation-report "$REPORT_PATH" --create-summary
+          else
+            echo "Basic report generated (github_reporter.py not found)"
+          fi
+        fi
+        
+        # Fail if violations found and fail-on-violations is true
+        if [ "${{ inputs.fail-on-violations }}" = "true" ] && [ "$VALIDATION_RESULT" = "fail" ]; then
+          echo "❌ Constitutional validation failed - violations found"
+          exit 1
+        fi
+        
+        echo "✅ Constitutional validation completed"
+
+branding:
+  icon: 'shield'
+  color: 'blue'

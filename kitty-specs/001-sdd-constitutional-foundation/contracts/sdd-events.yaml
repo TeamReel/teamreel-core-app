@@ -1,0 +1,125 @@
+# SDD Workflow Events Schema
+
+## Event Types
+
+### constitution.violation.detected
+Emitted when constitutional SE principle violations are found
+
+```yaml
+event_type: "constitution.violation.detected"
+payload:
+  event_id: string (UUID)
+  timestamp: string (ISO8601)
+  feature_id: string
+  context:
+    workflow_stage: enum [spec, plan, tasks, implement, review]
+    constitutional_version: string
+    violations:
+      - principle: enum [SRP, Encapsulation, LooseCoupling, Reusability, Portability, Defensibility, Maintainability, Simplicity]
+        severity: enum [ERROR, WARNING, INFO]
+        message: string
+        file_path: string
+        line_number: integer
+        rule_id: string
+  metadata:
+    tool: enum [spec-kitty, github-actions, git-hooks]
+    blocking: boolean
+    remediation_available: boolean
+```
+
+### quality.gate.failed
+Emitted when quality gates (coverage, complexity, security) fail
+
+```yaml
+event_type: "quality.gate.failed"
+payload:
+  event_id: string (UUID)
+  timestamp: string (ISO8601)
+  feature_id: string
+  context:
+    workflow_stage: enum [implement, review]
+    failed_gates:
+      - gate_type: enum [coverage, complexity, security]
+        current_value: number
+        required_value: number
+        blocking: boolean
+        details: string
+  metadata:
+    tool: string
+    can_override: boolean
+    approval_required: boolean
+```
+
+### template.sync.required
+Emitted when templates need synchronization with constitutional updates
+
+```yaml
+event_type: "template.sync.required"
+payload:
+  event_id: string (UUID)
+  timestamp: string (ISO8601)
+  context:
+    constitutional_version: string
+    template_manifest_version: string
+    out_of_sync_templates:
+      - name: string
+        current_checksum: string
+        required_checksum: string
+        se_principles_missing: array
+  metadata:
+    auto_sync_enabled: boolean
+    manual_intervention_required: boolean
+```
+
+### compliance.check.completed
+Emitted when constitutional compliance validation completes
+
+```yaml
+event_type: "compliance.check.completed"
+payload:
+  event_id: string (UUID)
+  timestamp: string (ISO8601)
+  feature_id: string
+  context:
+    workflow_stage: enum [spec, plan, tasks, implement, review]
+    compliance_status: enum [PASS, FAIL, WARNING]
+    violations_count: integer
+    quality_gates_status: enum [PASS, FAIL]
+    duration_seconds: number
+  metadata:
+    tool: string
+    constitution_version: string
+    next_action_required: boolean
+```
+
+## Event Processing
+
+### Event Handlers
+- **Logging Handler**: Records all events for audit trail
+- **Notification Handler**: Sends alerts to development team
+- **Metrics Handler**: Updates compliance dashboard
+- **Blocking Handler**: Prevents workflow progression on errors
+
+### Event Storage
+Events stored in `.kittify/events/{date}/` as YAML files for:
+- Audit compliance
+- Metrics generation
+- Trend analysis
+- Debugging workflow issues
+
+## Integration Points
+
+### Spec-Kitty CLI
+- Emits events during `specify`, `plan`, `tasks` workflows
+- Listens for template sync events
+- Blocks commands on constitutional violations
+
+### GitHub Actions
+- Emits events during CI/CD pipeline
+- Updates pull request status based on events
+- Triggers notifications on failures
+
+### Git Hooks
+- Emits events during commit/push operations
+- Blocks commits/pushes on violations
+- Provides immediate developer feedback
