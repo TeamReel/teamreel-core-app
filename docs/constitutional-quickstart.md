@@ -32,12 +32,23 @@ TeamReel's constitutional system ensures that all code adheres to proven Softwar
 # 1. Clone or navigate to your TeamReel project
 cd your-teamreel-project
 
-# 2. Install constitutional enforcement tools
-pip install ruff pytest pytest-cov bandit safety
+# 2. Install ALL constitutional dependencies (includes dashboard)
+pip install -r requirements.txt
+
+# Alternative: Install minimal constitutional enforcement tools only
+# pip install ruff pytest pytest-cov bandit safety flask
 
 # 3. Verify installation
-python -c "import ruff; print('✅ Constitutional tools installed')"
+python -c "import ruff, flask; print('✅ Constitutional tools and dashboard dependencies installed')"
 ```
+
+**📋 What's Included in requirements.txt:**
+- **Flask**: Web dashboard for compliance monitoring
+- **Ruff**: Fast Python linter and formatter
+- **Pytest**: Testing framework with coverage
+- **Bandit**: Security vulnerability scanner
+- **Pre-commit**: Git hooks for quality gates
+- **Other**: CLI tools, YAML parsing, date utilities
 
 ### Step 2: Configure Pre-Commit Hooks (5 min)
 

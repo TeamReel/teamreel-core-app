@@ -1,0 +1,26 @@
+# TeamReel Constitutional Foundation Requirements
+# Dashboard and Web Interface Dependencies
+flask>=2.3.0
+werkzeug>=2.3.0
+
+# Data Processing and Analysis
+python-dateutil>=2.8.0
+
+# Development and Testing Dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+ruff>=0.1.0
+bandit>=1.7.0
+safety>=2.3.0
+
+# Pre-commit Hooks and Code Quality
+pre-commit>=3.0.0
+
+# CLI and Configuration
+click>=8.0.0
+pyyaml>=6.0.0
+
+# Optional: Enhanced Dashboard Features
+# gunicorn>=20.1.0  # For production deployment
+# redis>=4.0.0      # For caching (if needed)
+# celery>=5.2.0     # For background tasks (if needed)
