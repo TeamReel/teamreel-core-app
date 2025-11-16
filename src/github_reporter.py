@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from constitutional_validator import ValidationResult, ValidationLevel
+from compliance_reporter import ComplianceReport, Violation
 
 
 @dataclass
@@ -100,7 +100,7 @@ class GitHubReporter:
         return None
 
     def generate_compliance_report(
-        self, validation_results: List[ValidationResult]
+        self, compliance_reports: List[ComplianceReport]
     ) -> GitHubComplianceReport:
         """Generate comprehensive GitHub compliance report from validation results."""
         # Aggregate results

@@ -19,7 +19,7 @@ jobs:
   constitutional-compliance:
     name: Constitutional Compliance Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     
     # Required status check for merge protection
     if: github.event_name == 'pull_request'

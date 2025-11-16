@@ -116,168 +116,31 @@ runs:
         if [ -n "$FILES_TO_VALIDATE" ]; then
           echo "🔍 Running constitutional validation..."
           
-          # Create temporary script to run validation
-          cat > validate_files.py << 'EOF'
-import sys
-import json
-import os
-from pathlib import Path
-
-# Add src to path to import constitutional validator
-sys.path.insert(0, 'src')
-
-try:
-    from constitutional_validator import ConstitutionalValidator, ValidationLevel
-    
-    validator = ConstitutionalValidator("${{ inputs.config-path }}")
-    
-    files_to_check = """FILES_TO_VALIDATE""".strip().split('\n')
-    files_to_check = [f.strip() for f in files_to_check if f.strip() and os.path.exists(f.strip())]
-    
-    if not files_to_check:
-        print("No Python files to validate")
-        result = {
-            "validation_result": "pass",
-            "compliance_score": 100,
-            "violations_count": 0,
-            "files_checked": 0,
-            "violations": []
-        }
-    else:
-        print(f"Validating {len(files_to_check)} files...")
-        
-        all_violations = []
-        total_score = 0
-        files_with_violations = 0
-        
-        for file_path in files_to_check:
-            try:
-                print(f"Checking: {file_path}")
-                validation_result = validator.validate_file(file_path)
-                
-                if validation_result.violations:
-                    files_with_violations += 1
-                    for violation in validation_result.violations:
-                        all_violations.append({
-                            "file": file_path,
-                            "principle": violation.principle.value,
-                            "level": violation.level.value,
-                            "message": violation.message,
-                            "line": violation.line_number,
-                            "suggestion": violation.suggestion
-                        })
-                
-                total_score += validation_result.compliance_score
-                
-            except Exception as e:
-                print(f"Error validating {file_path}: {str(e)}")
-                all_violations.append({
-                    "file": file_path,
-                    "principle": "validation_error",
-                    "level": "ERROR",
-                    "message": f"Failed to validate file: {str(e)}",
-                    "line": 0,
-                    "suggestion": "Check file syntax and ensure it's valid Python"
-                })
-        
-        avg_score = total_score / len(files_to_check) if files_to_check else 100
-        violation_count = len(all_violations)
-        
-        # Determine overall result based on strictness
-        strictness = "${{ inputs.strictness }}"
-        if strictness == "error":
-            validation_result = "fail" if any(v["level"] == "ERROR" for v in all_violations) else "pass"
-        elif strictness == "warning":
-            validation_result = "fail" if any(v["level"] in ["ERROR", "WARNING"] for v in all_violations) else "pass"
-        else:  # info
-            validation_result = "pass"  # Never fail on info level
-        
-        result = {
-            "validation_result": validation_result,
-            "compliance_score": round(avg_score, 1),
-            "violations_count": violation_count,
-            "files_checked": len(files_to_check),
-            "files_with_violations": files_with_violations,
-            "violations": all_violations
-        }
-    
-    # Write results
-    with open("${{ inputs.report-path }}", "w") as f:
-        json.dump(result, f, indent=2)
-    
-    # Output for GitHub Actions
-    print(f"result={result['validation_result']}")
-    print(f"compliance-score={result['compliance_score']}")
-    print(f"violations-count={result['violations_count']}")
-    print(f"report-path=${{ inputs.report-path }}")
-    
-    # Summary
-    print(f"\n🏛️ Constitutional Validation Summary:")
-    print(f"Files checked: {result['files_checked']}")
-    print(f"Compliance score: {result['compliance_score']}/100")
-    print(f"Violations found: {result['violations_count']}")
-    print(f"Result: {'✅ PASS' if result['validation_result'] == 'pass' else '❌ FAIL'}")
-    
-    if result['violations']:
-        print(f"\n📋 Constitutional Violations:")
-        for violation in result['violations'][:10]:  # Show first 10
-            print(f"  • {violation['file']}:{violation['line']} - {violation['principle']}")
-            print(f"    {violation['message']}")
-            if violation['suggestion']:
-                print(f"    💡 {violation['suggestion']}")
-        
-        if len(result['violations']) > 10:
-            print(f"  ... and {len(result['violations']) - 10} more violations")
-    
-except ImportError as e:
-    print(f"❌ Could not import constitutional validator: {e}")
-    print("Ensure WP01 (Constitutional Core Engine) is implemented")
-    result = {
-        "validation_result": "fail",
-        "compliance_score": 0,
-        "violations_count": 1,
-        "violations": [{
-            "file": "system",
-            "principle": "setup_error",
-            "level": "ERROR",
-            "message": "Constitutional validator not available",
-            "line": 0,
-            "suggestion": "Implement WP01 Constitutional Core Engine first"
-        }]
-    }
-    
-    with open("${{ inputs.report-path }}", "w") as f:
-        json.dump(result, f, indent=2)
-    
-    sys.exit(1)
-
-except Exception as e:
-    print(f"❌ Constitutional validation failed: {e}")
-    result = {
-        "validation_result": "fail",
-        "compliance_score": 0,
-        "violations_count": 1,
-        "violations": [{
-            "file": "system",
-            "principle": "execution_error", 
-            "level": "ERROR",
-            "message": str(e),
-            "line": 0,
-            "suggestion": "Check action logs for details"
-        }]
-    }
-    
-    with open("${{ inputs.report-path }}", "w") as f:
-        json.dump(result, f, indent=2)
-    
-    sys.exit(1)
-EOF
+          # Check if constitutional validator exists
+          if [ ! -f "src/constitutional_validator.py" ]; then
+            echo "❌ Constitutional validator not found at src/constitutional_validator.py"
+            echo "This action requires the constitutional validation engine from WP01"
+            exit 1
+          fi
           
-          # Replace FILES_TO_VALIDATE placeholder
-          sed -i "s|FILES_TO_VALIDATE|$FILES_TO_VALIDATE|g" validate_files.py
+          # Create simple validation script
+          echo "Files to validate: $FILES_TO_VALIDATE"
+          echo "$FILES_TO_VALIDATE" > files_to_check.txt
           
-          # Run validation
-          python validate_files.py > validation_output.txt 2>&1
+          # Run constitutional validation using existing CLI
+          python src/constitutional_validator.py --files files_to_check.txt --config "${{ inputs.config-path }}" --format json --output "${{ inputs.report-path }}" || VALIDATION_FAILED=true
+          
+          # Parse results from report file
+          if [ -f "${{ inputs.report-path }}" ]; then
+            VALIDATION_RESULT=$(python -c "import json; data=json.load(open('${{ inputs.report-path }}')); print(data.get('validation_result', 'fail'))")
+            COMPLIANCE_SCORE=$(python -c "import json; data=json.load(open('${{ inputs.report-path }}')); print(data.get('compliance_score', 0))")
+            VIOLATIONS_COUNT=$(python -c "import json; data=json.load(open('${{ inputs.report-path }}')); print(data.get('violations_count', 0))")
+          else
+            echo "❌ Constitutional validation report not generated"
+            VALIDATION_RESULT="fail"
+            COMPLIANCE_SCORE=0
+            VIOLATIONS_COUNT=1
+          fi
           
           # Parse outputs
           if grep -q "result=" validation_output.txt; then
@@ -304,49 +167,12 @@ EOF
         if [ "${{ inputs.report-format }}" = "github" ] && [ -f "$REPORT_PATH" ]; then
           echo "📊 Generating GitHub status report..."
           
-          python << 'EOF'
-import json
-import os
-
-report_path = "$REPORT_PATH"
-if os.path.exists(report_path):
-    with open(report_path) as f:
-        data = json.load(f)
-    
-    # Create GitHub step summary
-    summary = f"""
-## 🏛️ Constitutional Compliance Report
-
-| Metric | Value |
-|--------|-------|
-| Files Checked | {data.get('files_checked', 0)} |
-| Compliance Score | {data.get('compliance_score', 0)}/100 |
-| Violations Found | {data.get('violations_count', 0)} |
-| Result | {'✅ PASS' if data.get('validation_result') == 'pass' else '❌ FAIL'} |
-
-"""
-    
-    if data.get('violations'):
-        summary += "\n### 📋 Constitutional Violations\n\n"
-        for violation in data['violations'][:5]:  # Show first 5
-            summary += f"**{violation['file']}:{violation['line']}** - {violation['principle']}\n"
-            summary += f"- {violation['message']}\n"
-            if violation.get('suggestion'):
-                summary += f"- 💡 {violation['suggestion']}\n"
-            summary += "\n"
-        
-        if len(data['violations']) > 5:
-            summary += f"*... and {len(data['violations']) - 5} more violations*\n"
-    
-    # Write to GitHub step summary
-    if os.getenv('GITHUB_STEP_SUMMARY'):
-        with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as f:
-            f.write(summary)
-    
-    print("GitHub summary generated")
-else:
-    print("No report file found")
-EOF
+          # Use github_reporter.py if available for better formatting
+          if [ -f "src/github_reporter.py" ]; then
+            python src/github_reporter.py --validation-report "$REPORT_PATH" --create-summary
+          else
+            echo "Basic report generated (github_reporter.py not found)"
+          fi
         fi
         
         # Fail if violations found and fail-on-violations is true
