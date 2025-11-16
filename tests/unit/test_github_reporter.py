@@ -24,6 +24,7 @@ from github_reporter import (
     GitHubStatusCheck,
     GitHubPRComment,
     GitHubComplianceReport,
+    ValidationResult,
 )
 
 # Import constitutional validator for test data
@@ -151,6 +152,22 @@ class TestGitHubReporter(unittest.TestCase):
             quality_gates={"coverage_threshold": True, "complexity_limit": True},
             metadata={"files_checked": 1, "compliance_score": 100.0},
         )
+
+        # Create sample validation results
+        self.validation_results = [
+            ValidationResult(
+                file_path="src/test_file1.py",
+                is_valid=False,
+                violations=self.sample_violations,
+                compliance_score=85.0,
+            ),
+            ValidationResult(
+                file_path="src/clean_file.py",
+                is_valid=True,
+                violations=[],
+                compliance_score=100.0,
+            ),
+        ]
 
     @patch.dict(os.environ, {"GITHUB_REPOSITORY": "TeamReel/test-repo"})
     def test_reporter_initialization_from_env(self):

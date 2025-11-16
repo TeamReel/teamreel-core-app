@@ -110,7 +110,7 @@ class GitHubReporter:
         return None
 
     def generate_compliance_report(
-        self, compliance_reports: List[ComplianceReport]
+        self, validation_results: List[ValidationResult]
     ) -> GitHubComplianceReport:
         """Generate comprehensive GitHub compliance report from validation results."""
         # Aggregate results
@@ -176,7 +176,7 @@ class GitHubReporter:
         principle_violations = {}
         for result in validation_results:
             for violation in result.violations:
-                principle = violation.principle.value
+                principle = violation.principle
                 if principle not in principle_violations:
                     principle_violations[principle] = 0
                 principle_violations[principle] += 1
@@ -272,7 +272,7 @@ class GitHubReporter:
             violations_by_principle = {}
             for result in validation_results:
                 for violation in result.violations:
-                    principle = violation.principle.value.replace("_", " ").title()
+                    principle = violation.principle.replace("_", " ").title()
                     if principle not in violations_by_principle:
                         violations_by_principle[principle] = []
                     violations_by_principle[principle].append(
@@ -378,7 +378,7 @@ class GitHubReporter:
             principle_counts = {}
             for result in validation_results:
                 for violation in result.violations:
-                    principle = violation.principle.value.replace("_", " ").title()
+                    principle = violation.principle.replace("_", " ").title()
                     principle_counts[principle] = principle_counts.get(principle, 0) + 1
 
             summary_lines.extend(
