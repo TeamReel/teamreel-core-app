@@ -5,7 +5,7 @@ Performance Testing & Benchmarking System - T037
 Performance testing and benchmarking for constitutional enforcement components.
 Validates execution times, memory usage, and scalability requirements.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os

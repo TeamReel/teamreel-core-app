@@ -5,7 +5,7 @@ End-to-End Testing Automation - T038
 Comprehensive end-to-end testing automation for complete constitutional validation workflows.
 Tests entire pipelines from code analysis to violation reporting and enforcement.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os

@@ -1,5 +1,5 @@
 """
-Test fixtures and configuration for TeamReel Constitutional Validator tests.
+Test fixtures and configuration for project Constitutional Validator tests.
 """
 
 import os

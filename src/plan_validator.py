@@ -2,11 +2,11 @@
 """
 Plan Validator - Constitutional Compliance for Implementation Plans
 
-This module validates implementation plan documents against TeamReel's constitutional
+This module validates implementation plan documents against project's constitutional
 requirements, ensuring all plans include proper architectural design, SE principles
 compliance, and quality gates before tasks are generated.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import re
@@ -122,7 +122,7 @@ class PlanValidator:
         self.constitutional_validator = ConstitutionalValidator(effective_config_path)
         self.config = self._load_config(config_path)
 
-        # Required sections for TeamReel implementation plans
+        # Required sections for project implementation plans
         self.required_sections = {
             "SE Principles Compliance",
             "Architecture Design",

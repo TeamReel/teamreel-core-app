@@ -1,6 +1,6 @@
 name: 'Constitutional Validator'
-description: 'Validates code against TeamReel constitutional requirements (SE principles, quality gates)'
-author: 'TeamReel'
+description: 'Validates code against project constitutional requirements (SE principles, quality gates)'
+author: 'project'
 
 inputs:
   config-path:
@@ -80,7 +80,7 @@ runs:
       run: |
         set -e
         
-        echo "🏛️ Starting TeamReel Constitutional Validation"
+        echo "🏛️ Starting project Constitutional Validation"
         echo "Configuration: ${{ inputs.config-path }}"
         echo "Scope: ${{ inputs.validation-scope }}"
         echo "Strictness: ${{ inputs.strictness }}"

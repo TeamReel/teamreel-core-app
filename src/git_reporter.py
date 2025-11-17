@@ -1,5 +1,5 @@
 """
-TeamReel Git-Optimized Constitutional Violation Reporter
+project Git-Optimized Constitutional Violation Reporter
 
 Provides Git-specific reporting format for constitutional violations,
 optimized for terminal output and Git workflow integration.
@@ -282,7 +282,7 @@ class GitViolationReporter:
             f"{self.colors['yellow']}{self.colors['bold']}🔧 Next Steps{self.colors['reset']}"
         )
         output.append(f"   1. Fix the violations listed above")
-        output.append(f"   2. Review TeamReel's constitutional requirements")
+        output.append(f"   2. Review project's constitutional requirements")
         output.append(f"   3. Re-stage your files and try again")
         output.append("")
 
@@ -433,7 +433,7 @@ class GitViolationReporter:
     def _format_success_message(self, context: str) -> str:
         """Format success message for clean validation"""
         if self.format_type == GitReportFormat.TERMINAL:
-            return f"{self.colors['green']}{self.colors['bold']}✅ Constitutional validation passed{self.colors['reset']}\n{self.colors['green']}All files comply with TeamReel's SE principles{self.colors['reset']}"
+            return f"{self.colors['green']}{self.colors['bold']}✅ Constitutional validation passed{self.colors['reset']}\n{self.colors['green']}All files comply with project's SE principles{self.colors['reset']}"
         elif self.format_type == GitReportFormat.GITHUB_ACTIONS:
             return "::notice::Constitutional validation passed - all files comply with SE principles"
         else:
@@ -497,7 +497,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="TeamReel Git Constitutional Violation Reporter"
+        description="project Git Constitutional Violation Reporter"
     )
     parser.add_argument(
         "--format",

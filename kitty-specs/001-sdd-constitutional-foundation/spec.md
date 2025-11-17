@@ -4,13 +4,13 @@
 **Feature Branch**: `001-sdd-constitutional-foundation`  
 **Created**: 2025-11-15  
 **Status**: Draft  
-**Input**: User description: "Initialiseer de TeamReel SDD-omgeving door constitution v1.1.0 formeel te verankeren, templates te synchroniseren met alle SE-principes, de mission file te definiëren, quality gates (coverage, complexity, security) vast te leggen en de volledige spec→plan→tasks workflow te operationaliseren als verplicht fundament voor alle toekomstige features."
+**Input**: User description: "Initialiseer de project SDD-omgeving door constitution v1.1.0 formeel te verankeren, templates te synchroniseren met alle SE-principes, de mission file te definiëren, quality gates (coverage, complexity, security) vast te leggen en de volledige spec→plan→tasks workflow te operationaliseren als verplicht fundament voor alle toekomstige features."
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Constitutional Enforcement Activation (Priority: P1)
 
-As a TeamReel developer, I need the SDD foundation to automatically enforce all constitutional principles so that every feature I develop meets the 8 SE principles without manual oversight.
+As a project developer, I need the SDD foundation to automatically enforce all constitutional principles so that every feature I develop meets the 8 SE principles without manual oversight.
 
 **Why this priority**: This is the core foundation - without automated constitutional enforcement, all subsequent development lacks quality guarantees and constitutional compliance.
 
@@ -26,7 +26,7 @@ As a TeamReel developer, I need the SDD foundation to automatically enforce all 
 
 ### User Story 2 - Complete Workflow Operationalization (Priority: P1)
 
-As a TeamReel developer, I need the full spec→plan→tasks→implement→review→merge workflow to be operationalized with mandatory quality gates so that every feature follows constitutional development practices.
+As a project developer, I need the full spec→plan→tasks→implement→review→merge workflow to be operationalized with mandatory quality gates so that every feature follows constitutional development practices.
 
 **Why this priority**: Equal P1 because the workflow operationalization is required for any feature development to occur properly.
 
@@ -42,7 +42,7 @@ As a TeamReel developer, I need the full spec→plan→tasks→implement→revie
 
 ### User Story 3 - Mission File & Foundation Documentation (Priority: P2)
 
-As a TeamReel team member, I need comprehensive mission documentation that integrates TeamReel platform goals with mandatory SDD processes so that the constitutional foundation is clearly understood and actionable.
+As a project team member, I need comprehensive mission documentation that integrates project platform goals with mandatory SDD processes so that the constitutional foundation is clearly understood and actionable.
 
 **Why this priority**: Important for clarity and adoption, but the automated enforcement (P1) is more critical for immediate functionality.
 
@@ -51,14 +51,14 @@ As a TeamReel team member, I need comprehensive mission documentation that integ
 **Acceptance Scenarios**:
 
 1. **Given** a new team member reads the mission file, **When** they follow the SDD process, **Then** they can successfully create constitutional-compliant features
-2. **Given** the mission file defines TeamReel platform goals, **When** features are developed, **Then** they align with both platform strategy and constitutional requirements
+2. **Given** the mission file defines project platform goals, **When** features are developed, **Then** they align with both platform strategy and constitutional requirements
 3. **Given** mission documentation is complete, **When** spec-kitty dashboard runs, **Then** all constitutional foundation elements show as properly configured
 
 ---
 
 ### User Story 4 - Quality Gates Integration (Priority: P2)
 
-As a TeamReel developer, I need integrated quality gates (coverage, complexity, security, GDPR) that work seamlessly with GitHub workflows so that constitutional compliance is automatically enforced at CI/CD level.
+As a project developer, I need integrated quality gates (coverage, complexity, security, GDPR) that work seamlessly with GitHub workflows so that constitutional compliance is automatically enforced at CI/CD level.
 
 **Why this priority**: Essential for production readiness but depends on foundation enforcement being operational first.
 
@@ -84,7 +84,7 @@ As a TeamReel developer, I need integrated quality gates (coverage, complexity, 
 - **FR-001**: System MUST automatically validate all code commits against the 8 SE principles defined in constitution v1.1.0
 - **FR-002**: System MUST block commits that violate complexity limits (cyclomatic complexity >10), naming conventions, or test coverage requirements (<80%)
 - **FR-003**: System MUST enforce the complete spec→plan→tasks→implement→review→merge workflow with constitutional compliance at each stage
-- **FR-004**: System MUST generate and maintain a mission file that integrates TeamReel platform strategy with mandatory SDD processes
+- **FR-004**: System MUST generate and maintain a mission file that integrates project platform strategy with mandatory SDD processes
 - **FR-005**: System MUST provide automated spec-kitty verify command that validates constitutional compliance across all feature artifacts
 - **FR-006**: System MUST implement pre-commit hooks that catch constitutional violations before they reach CI/CD pipeline
 - **FR-007**: System MUST integrate GitHub Actions workflows that block PR merges when quality gates fail
@@ -97,7 +97,7 @@ As a TeamReel developer, I need integrated quality gates (coverage, complexity, 
 ### Key Entities *(include if feature involves data)*
 
 - **Constitutional Compliance Report**: Validation results containing SE principle violations, quality gate status, and remediation guidance
-- **Mission Statement**: Strategic document combining TeamReel platform goals with mandatory SDD process requirements
+- **Mission Statement**: Strategic document combining project platform goals with mandatory SDD process requirements
 - **Quality Gate Configuration**: Executable policies defining coverage thresholds, complexity limits, security rules, and naming conventions
 - **Feature Lifecycle State**: Tracking entity for spec→plan→tasks→implement→review→merge progression with constitutional checkpoints
 - **SDD Template Manifest**: Registry of all constitutional template versions and their synchronization status with SE principles
@@ -105,7 +105,7 @@ As a TeamReel developer, I need integrated quality gates (coverage, complexity, 
 ### Interface Contracts *(mandatory for API/data features)*
 
 <!--
-  Define clear input/output contracts following TeamReel naming conventions:
+  Define clear input/output contracts following project naming conventions:
   - REST API: kebab-case endpoints (e.g., /user-profiles/, /video-workflows/)
   - Backend models: snake_case (e.g., user_profile, video_workflow)
   - Frontend props: camelCase (e.g., userProfile, videoWorkflow)
@@ -137,7 +137,7 @@ As a TeamReel developer, I need integrated quality gates (coverage, complexity, 
 
 ### Constitution Compliance Checklist *(mandatory)*
 
-Check each requirement against TeamReel SE Principles:
+Check each requirement against project SE Principles:
 
 - [ ] **SRP (Single Responsibility)**: Each component/module has one clear responsibility
 - [ ] **Encapsulation**: Internal details are hidden behind clear interfaces  

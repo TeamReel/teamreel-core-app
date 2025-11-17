@@ -2,10 +2,10 @@
 """
 Constitutional Foundation Initialization Script - T031
 
-Complete system setup for TeamReel's SDD Constitutional Foundation & Enforcement.
+Complete system setup for project's SDD Constitutional Foundation & Enforcement.
 Initializes the entire constitutional validation system for new projects.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os
@@ -54,7 +54,7 @@ class ConstitutionalFoundationInitializer:
 
     def initialize_foundation(self) -> bool:
         """Complete constitutional foundation initialization."""
-        print("🏗️ Initializing TeamReel Constitutional Foundation...")
+        print("🏗️ Initializing project Constitutional Foundation...")
         print(f"📁 Project: {self.config.project_name}")
         print(f"📍 Location: {self.config.project_root.absolute()}")
 
@@ -499,7 +499,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "{self.config.project_name}"
 version = "0.1.0"
-description = "TeamReel project with Constitutional Foundation enforcement"
+description = "project project with Constitutional Foundation enforcement"
 requires-python = ">={self.config.python_version.rstrip('+')}"
 dependencies = [
     "pytest>=7.0.0",
@@ -699,8 +699,8 @@ dist/
 def main():
     """Main CLI entry point for constitutional foundation initialization."""
     parser = argparse.ArgumentParser(
-        description="Initialize TeamReel Constitutional Foundation",
-        epilog="This script sets up the complete constitutional enforcement system for a TeamReel project.",
+        description="Initialize project Constitutional Foundation",
+        epilog="This script sets up the complete constitutional enforcement system for a project project.",
     )
 
     parser.add_argument("project_name", help="Name of the project to initialize")

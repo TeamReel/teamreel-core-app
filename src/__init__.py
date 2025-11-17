@@ -1,8 +1,8 @@
 """
-TeamReel Constitutional Foundation Package
+project Constitutional Foundation Package
 
 This package provides the core constitutional validation engine and supporting components
-for enforcing TeamReel's Software Development Design (SDD) principles across the platform.
+for enforcing project's Software Development Design (SDD) principles across the platform.
 
 SE Principles Focus:
 - SRP: Each module has a single, well-defined responsibility
@@ -25,7 +25,7 @@ from .complexity_analyzer import ComplexityAnalyzer
 from .security_scanner import SecurityScanner
 
 __version__ = "1.0.0"
-__author__ = "TeamReel Engineering"
+__author__ = "project Engineering"
 
 # Public API
 __all__ = [

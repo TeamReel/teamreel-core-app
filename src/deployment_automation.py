@@ -5,7 +5,7 @@ Deployment Automation Scripts - T039
 Automated deployment system for constitutional enforcement infrastructure.
 Handles configuration validation, health checks, rollout, and rollback procedures.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os
@@ -176,7 +176,7 @@ class ConstitutionalDeploymentSystem:
                 "strict_mode": True,
                 "performance_monitoring": True,
             },
-            health_check_url="https://api.teamreel.com/constitutional/health",
+            health_check_url="https://api.project.com/constitutional/health",
             pre_deployment_commands=[
                 'echo "Starting production deployment"',
                 "systemctl stop constitutional-service",

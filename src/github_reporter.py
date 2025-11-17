@@ -6,7 +6,7 @@ This module provides GitHub-specific reporting capabilities for constitutional
 compliance validation, including status checks, PR comments, and compliance
 dashboard integration.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json
@@ -69,7 +69,7 @@ class GitHubReporter:
     def __init__(self, repo_name: str = "", base_url: str = ""):
         """Initialize GitHub reporter."""
         self.repo_name = repo_name or os.getenv(
-            "GITHUB_REPOSITORY", "TeamReel/teamreel-core-app"
+            "GITHUB_REPOSITORY", "project/project-core-app"
         )
         self.base_url = base_url or f"https://github.com/{self.repo_name}"
         self.workflow_run_id = os.getenv("GITHUB_RUN_ID", "")
@@ -238,7 +238,7 @@ class GitHubReporter:
                 [
                     "### ✅ Constitutional Compliance: PASSED",
                     "",
-                    "🎉 **Congratulations!** This PR meets all TeamReel constitutional requirements.",
+                    "🎉 **Congratulations!** This PR meets all project constitutional requirements.",
                     "",
                     "**SE Principles Validated:**",
                     "- ✅ Single Responsibility Principle",
@@ -262,7 +262,7 @@ class GitHubReporter:
                     "",
                     "🚫 **This PR has constitutional violations that must be fixed before merge.**",
                     "",
-                    "**Action Required**: Please review the violations below and update your code to meet TeamReel's constitutional requirements.",
+                    "**Action Required**: Please review the violations below and update your code to meet project's constitutional requirements.",
                     "",
                 ]
             )
@@ -327,7 +327,7 @@ class GitHubReporter:
         body_lines.extend(
             [
                 "---",
-                "*This report was generated automatically by TeamReel's Constitutional Enforcement system*",
+                "*This report was generated automatically by project's Constitutional Enforcement system*",
                 "*Workflow: [`constitutional-compliance.yml`](.github/workflows/constitutional-compliance.yml)*",
                 (
                     f"*Run Details: [View Workflow]({self.workflow_run_url})*"
@@ -414,7 +414,7 @@ class GitHubReporter:
                     "",
                     "✅ Constitutional compliance validation passed!",
                     "",
-                    "Your code meets all TeamReel constitutional requirements. The PR is ready for:",
+                    "Your code meets all project constitutional requirements. The PR is ready for:",
                     "1. Code review by team members",
                     "2. Additional testing if required",
                     "3. Merge when approved",

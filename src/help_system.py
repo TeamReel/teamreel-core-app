@@ -5,7 +5,7 @@ Spec-Kitty Constitutional Help System
 Contextual help and guidance system for constitutional compliance within spec-kitty.
 Provides real-time assistance, principle explanations, and remediation guidance.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json
@@ -363,7 +363,7 @@ def update_user_email(user_id, new_email):
             topic="Getting Started with Constitutional Compliance",
             summary="Quick setup guide for constitutional enforcement",
             detailed_help="""
-Constitutional compliance at TeamReel is about building maintainable, secure, and scalable software.
+Constitutional compliance at project is about building maintainable, secure, and scalable software.
 
 Quick Start:
 1. Install tools: pip install ruff pytest pytest-cov bandit
@@ -505,7 +505,7 @@ To fix security issues:
     def _show_general_help(self) -> str:
         """Show general help overview."""
         return """
-🏛️ TeamReel Constitutional Help System
+🏛️ project Constitutional Help System
 
 Constitutional software engineering ensures your code follows proven SE principles 
 through automated enforcement and quality gates.
@@ -691,7 +691,7 @@ For more help: constitutional-help getting-started
 def main():
     """Main CLI interface for the constitutional help system."""
     parser = argparse.ArgumentParser(
-        description="TeamReel Constitutional Help System",
+        description="project Constitutional Help System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

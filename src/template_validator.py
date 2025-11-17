@@ -5,7 +5,7 @@ Template Validation Against SE Principles
 Validates templates against current constitutional requirements.
 Ensures all templates comply with the 8 Software Engineering principles.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json
@@ -344,7 +344,7 @@ class TemplateValidator:
 
         # Check for project-specific names or references
         specific_patterns = [
-            r"TeamReel(?!.*template)",  # Project name not in template context
+            r"project(?!.*template)",  # Project name not in template context
             r"brian@",  # Specific email
             r"my-project",  # Generic project reference
         ]

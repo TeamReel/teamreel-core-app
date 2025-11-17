@@ -46,7 +46,7 @@ constitutional_compliance_report:
 ```
 
 ### Mission Statement
-**Purpose**: Strategic document combining TeamReel platform goals with mandatory SDD process requirements
+**Purpose**: Strategic document combining project platform goals with mandatory SDD process requirements
 
 ```yaml
 mission_statement:

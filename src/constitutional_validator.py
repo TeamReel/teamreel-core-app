@@ -1,5 +1,5 @@
 """
-TeamReel Constitutional Validation Engine
+project Constitutional Validation Engine
 
 Core engine that orchestrates SE principle validation across all code types.
 Implements distributed plugin architecture with offline capability.
@@ -404,7 +404,7 @@ def _parse_cli_arguments() -> argparse.Namespace:
     """Parse CLI arguments for constitutional validation."""
 
     parser = argparse.ArgumentParser(
-        description="TeamReel constitutional validation CLI",
+        description="project constitutional validation CLI",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(

@@ -1,5 +1,5 @@
 """
-TeamReel Constitutional Compliance Report Generator
+project Constitutional Compliance Report Generator
 
 Generate structured compliance reports with actionable violation details and remediation guidance.
 
@@ -72,7 +72,7 @@ class ComplianceReport:
 
         # Header
         lines.append("=" * 60)
-        lines.append("TEAMREEL CONSTITUTIONAL COMPLIANCE REPORT")
+        lines.append("project CONSTITUTIONAL COMPLIANCE REPORT")
         lines.append("=" * 60)
         lines.append("")
 

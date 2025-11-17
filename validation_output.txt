@@ -1,0 +1,4 @@
+result=pass
+compliance-score=100
+violations-count=72
+report-path=test-report.json

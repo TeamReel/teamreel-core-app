@@ -15,7 +15,7 @@
 
 ## Path Conventions
 
-#### TeamReel Path Conventions (Constitutional Compliance)
+#### project Path Conventions (Constitutional Compliance)
 - **Frontend modules**: `frontend/src/modules/{module_name}/` (camelCase for TS/React)
 - **Backend apps**: `backend/apps/{app_name}/` (snake_case for Django/Python)  
 - **AI workflows**: `ai/workflows/{workflow_name}/` (snake_case for Python)
@@ -65,7 +65,7 @@
 - [X] T025 Build quick-start guide for developers (`docs/constitutional-quickstart.md`)
 - [X] T026 Implement spec-kitty constitutional help system (`src/help_system.py`)
 
-**Implementation Sketch**: Generate mission documentation integrating TeamReel goals with SDD processes, create web-based dashboard for compliance metrics, comprehensive developer onboarding guides.
+**Implementation Sketch**: Generate mission documentation integrating project goals with SDD processes, create web-based dashboard for compliance metrics, comprehensive developer onboarding guides.
 
 **Parallel Opportunities**: Can be developed alongside other work packages once WP01 core engine is complete.
 
@@ -174,7 +174,7 @@
 ## Work Package WP08: Foundation Setup & Testing (Priority: P2)
 
 **Goal**: Complete system deployment, configuration, and comprehensive testing.
-**Independent Test**: Fresh TeamReel project can be initialized with constitutional foundation and pass full end-to-end workflow validation.
+**Independent Test**: Fresh project project can be initialized with constitutional foundation and pass full end-to-end workflow validation.
 **Dependencies**: WP01-WP07 (requires all other work packages)
 **Prompt**: `tasks/planned/WP08-foundation-setup-testing.md`
 

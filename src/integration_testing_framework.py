@@ -5,7 +5,7 @@ Integration Testing Framework - T036
 End-to-end integration testing for constitutional enforcement workflows.
 Tests complete validation pipelines, component interactions, and system behavior.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os

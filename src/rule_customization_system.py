@@ -6,7 +6,7 @@ Provides project-specific customization of constitutional enforcement rules.
 Allows teams to adapt the constitutional framework to their specific needs while
 maintaining core compliance requirements.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os
@@ -758,7 +758,7 @@ class RuleCustomizationSystem:
 def main():
     """Main CLI entry point for rule customization system."""
     parser = argparse.ArgumentParser(
-        description="Manage constitutional rule customizations for TeamReel projects"
+        description="Manage constitutional rule customizations for project projects"
     )
 
     parser.add_argument(

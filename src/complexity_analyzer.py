@@ -3,10 +3,10 @@
 Complexity Analyzer - Cyclomatic Complexity Quality Gate
 
 This module analyzes code complexity and enforces limits on cyclomatic complexity
-to maintain code readability and maintainability as part of TeamReel's quality
+to maintain code readability and maintainability as part of project's quality
 gates system.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import ast

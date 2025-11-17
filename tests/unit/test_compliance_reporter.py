@@ -126,7 +126,7 @@ class TestComplianceReport:
         readable_output = report.to_human_readable()
 
         assert "✅ PASS" in readable_output
-        assert "TEAMREEL CONSTITUTIONAL COMPLIANCE REPORT" in readable_output
+        assert "project CONSTITUTIONAL COMPLIANCE REPORT" in readable_output
         assert "File: test.py" in readable_output
         assert "Constitution Version: v1.1.0" in readable_output
         assert "Total Violations: 0" in readable_output

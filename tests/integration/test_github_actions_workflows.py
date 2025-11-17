@@ -5,7 +5,7 @@ Integration tests for GitHub Actions workflows and validation.
 Tests the complete GitHub Actions CI/CD pipeline including workflow syntax,
 action integration, and end-to-end constitutional compliance validation.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json

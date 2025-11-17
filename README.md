@@ -1,2 +1,2 @@
-# teamreel-core-app
+# project-core-app
 AI-assisted content &amp; video workflow platform

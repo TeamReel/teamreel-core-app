@@ -1,20 +1,20 @@
-# TeamReel SDD Constitutional Foundation - Quick Start Guide
+# project SDD Constitutional Foundation - Quick Start Guide
 
 ## Overview
-This guide helps you get started with the TeamReel Constitutional Foundation system that enforces 8 Software Engineering principles throughout your development workflow.
+This guide helps you get started with the project Constitutional Foundation system that enforces 8 Software Engineering principles throughout your development workflow.
 
 ## Prerequisites
 - Python 3.11+
 - PowerShell 5.1+ (Windows) or Bash (Linux/macOS)
 - Git 2.30+
 - spec-kitty CLI installed
-- TeamReel repository access
+- project repository access
 
 ## Installation
 
 ### 1. Initialize Constitutional Foundation
 ```bash
-# From your TeamReel project root
+# From your project project root
 spec-kitty init-constitution
 
 # This creates:
@@ -199,7 +199,7 @@ Warning: Templates out of sync with constitution v1.1.0
 spec-kitty validate --override --reason "Emergency hotfix for security issue"
 
 # Override quality gates (requires senior developer approval)
-spec-kitty quality-gates --override --approver john.doe@teamreel.com
+spec-kitty quality-gates --override --approver john.doe@project.com
 ```
 
 #### Reset Constitutional State
@@ -252,4 +252,4 @@ spec-kitty dashboard
 - **Template Documentation**: `.kittify/templates/README.md`
 - **Team Guidelines**: `docs/constitutional-development.md`
 
-For issues and feature requests, contact the TeamReel development team or create an issue in the project repository.
+For issues and feature requests, contact the project development team or create an issue in the project repository.

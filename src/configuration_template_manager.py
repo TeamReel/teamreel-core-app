@@ -5,7 +5,7 @@ Configuration Template System - T032
 Manages configuration templates for constitutional enforcement rules.
 Provides centralized template management and customization capabilities.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os
@@ -42,7 +42,7 @@ class TemplateMetadata:
     description: str
     created: str
     modified: str
-    author: str = "TeamReel Constitutional Foundation"
+    author: str = "project Constitutional Foundation"
     constitutional_version: str = "001-sdd-constitutional-foundation"
     tags: List[str] = None
     dependencies: List[str] = None
@@ -322,7 +322,7 @@ class ConfigurationTemplateManager:
             name="quality_gates_standard",
             template_type=TemplateType.QUALITY_GATES,
             version="1.0.0",
-            description="Standard quality gates configuration for TeamReel projects",
+            description="Standard quality gates configuration for project projects",
             created=datetime.utcnow().isoformat() + "Z",
             modified=datetime.utcnow().isoformat() + "Z",
             tags=["quality", "gates", "validation"],
@@ -421,13 +421,13 @@ class ConfigurationTemplateManager:
     def _create_naming_conventions_template(self) -> None:
         """Create naming conventions configuration template."""
         metadata = TemplateMetadata(
-            name="naming_conventions_teamreel",
+            name="naming_conventions_project",
             template_type=TemplateType.NAMING_CONVENTIONS,
             version="1.0.0",
-            description="TeamReel naming conventions for multi-language projects",
+            description="project naming conventions for multi-language projects",
             created=datetime.utcnow().isoformat() + "Z",
             modified=datetime.utcnow().isoformat() + "Z",
-            tags=["naming", "conventions", "teamreel"],
+            tags=["naming", "conventions", "project"],
             dependencies=[],
         )
 
@@ -531,7 +531,7 @@ class ConfigurationTemplateManager:
             validation_rules=validation_rules,
         )
 
-        self.templates["naming_conventions_teamreel"] = template_config
+        self.templates["naming_conventions_project"] = template_config
         print("  ✅ Naming Conventions template")
 
     def _create_security_policies_template(self) -> None:
@@ -540,7 +540,7 @@ class ConfigurationTemplateManager:
             name="security_policies_standard",
             template_type=TemplateType.SECURITY_POLICIES,
             version="1.0.0",
-            description="Standard security policies for TeamReel projects",
+            description="Standard security policies for project projects",
             created=datetime.utcnow().isoformat() + "Z",
             modified=datetime.utcnow().isoformat() + "Z",
             tags=["security", "policies", "scanning"],
@@ -708,20 +708,20 @@ class ConfigurationTemplateManager:
     def _create_project_config_template(self) -> None:
         """Create project configuration template."""
         metadata = TemplateMetadata(
-            name="project_config_teamreel",
+            name="project_config_project",
             template_type=TemplateType.PROJECT_CONFIG,
             version="1.0.0",
-            description="Standard TeamReel project configuration",
+            description="Standard project project configuration",
             created=datetime.utcnow().isoformat() + "Z",
             modified=datetime.utcnow().isoformat() + "Z",
-            tags=["project", "config", "teamreel"],
+            tags=["project", "config", "project"],
             dependencies=[],
         )
 
         content = {
             "project_config": {
                 "version": "1.0.0",
-                "project_type": "teamreel_standard",
+                "project_type": "project_standard",
                 "tech_stack": {
                     "frontend": "Next.js 14 + TypeScript + Tailwind CSS",
                     "backend": "Django REST Framework + Python 3.11+",
@@ -766,9 +766,9 @@ class ConfigurationTemplateManager:
         validation_rules = {
             "required_fields": ["project_config.version", "project_config.tech_stack"],
             "valid_project_types": [
-                "teamreel_standard",
-                "teamreel_minimal",
-                "teamreel_enterprise",
+                "project_standard",
+                "project_minimal",
+                "project_enterprise",
             ],
         }
 
@@ -779,7 +779,7 @@ class ConfigurationTemplateManager:
             validation_rules=validation_rules,
         )
 
-        self.templates["project_config_teamreel"] = template_config
+        self.templates["project_config_project"] = template_config
         print("  ✅ Project Configuration template")
 
     def get_template(self, template_name: str) -> Optional[TemplateConfig]:
@@ -893,7 +893,7 @@ class ConfigurationTemplateManager:
 def main():
     """Main CLI entry point for configuration template management."""
     parser = argparse.ArgumentParser(
-        description="Manage configuration templates for TeamReel Constitutional Foundation"
+        description="Manage configuration templates for project Constitutional Foundation"
     )
 
     parser.add_argument(

@@ -46,7 +46,7 @@ history:
 - Test coverage validation enforces 80% threshold with accurate reporting
 - Complexity analysis blocks functions with cyclomatic complexity >10
 - Security scanning integrates with bandit and blocks HIGH/CRITICAL vulnerabilities
-- Naming convention validation enforces TeamReel standards across all code types
+- Naming convention validation enforces project standards across all code types
 
 **Independent Test**: Submit code that fails each quality gate type and verify proper blocking with specific remediation guidance.
 
@@ -89,7 +89,7 @@ history:
 ### Subtask T030 – Add Naming Convention Validation
 **File**: `src/naming_validator.py`
 
-**Purpose**: Enforce TeamReel naming conventions across all code types
+**Purpose**: Enforce project naming conventions across all code types
 
 **Implementation Requirements**:
 - REST API: kebab-case validation

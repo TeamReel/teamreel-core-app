@@ -1,5 +1,5 @@
 """
-TeamReel Spec-Kitty Constitutional Validation Plugin
+project Spec-Kitty Constitutional Validation Plugin
 
 Integrates constitutional validation into spec-kitty CLI workflow,
 providing hard-blocking constitutional enforcement at each stage.
@@ -398,7 +398,7 @@ class SpecKittyConstitutionalPlugin:
             # Check naming conventions in spec
             if "kebab-case" not in spec_content or "snake_case" not in spec_content:
                 suggestions.append(
-                    "Include TeamReel naming convention requirements in specification"
+                    "Include project naming convention requirements in specification"
                 )
 
     def hook_plan_validate(self, plan_file: str) -> ValidationResult:
@@ -979,7 +979,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="TeamReel Spec-Kitty Constitutional Validation Plugin"
+        description="project Spec-Kitty Constitutional Validation Plugin"
     )
     parser.add_argument(
         "stage",

@@ -2,11 +2,11 @@
 """
 Spec Validator - Constitutional Compliance for Specifications
 
-This module validates specification documents against TeamReel's constitutional
+This module validates specification documents against project's constitutional
 requirements, ensuring all specifications include mandatory constitutional compliance
 elements before being approved for implementation planning.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import re
@@ -116,7 +116,7 @@ class SpecValidator:
         self.constitutional_validator = ConstitutionalValidator(effective_config_path)
         self.config = self._load_config(config_path)
 
-        # Required sections for TeamReel specifications
+        # Required sections for project specifications
         self.required_sections = {
             "Constitutional Enforcement Integration",
             "User Story",

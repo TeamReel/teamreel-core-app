@@ -2,11 +2,11 @@
 """
 Coverage Validator - Test Coverage Quality Gate
 
-This module implements test coverage validation as part of TeamReel's quality
+This module implements test coverage validation as part of project's quality
 gates system, enforcing minimum coverage thresholds with detailed reporting
 and remediation guidance.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json

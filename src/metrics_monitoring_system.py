@@ -5,7 +5,7 @@ Metrics Collection & Monitoring System - T040
 Comprehensive metrics collection and monitoring for constitutional enforcement.
 Tracks compliance metrics, performance data, and system health indicators.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os

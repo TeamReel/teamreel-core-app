@@ -4,9 +4,9 @@ Security Scanner - Security Vulnerability Quality Gate
 
 This module performs comprehensive security scanning across multiple languages
 and identifies potential security vulnerabilities, enforcing security standards
-as part of TeamReel's quality gates system.
+as part of project's quality gates system.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json

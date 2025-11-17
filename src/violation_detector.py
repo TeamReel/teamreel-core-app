@@ -1,5 +1,5 @@
 """
-TeamReel Constitutional Violation Detection System
+project Constitutional Violation Detection System
 
 Implements detailed SE principle violation detection using AST analysis, pattern matching,
 and rule-based evaluation. Supports Python, JavaScript, TypeScript, YAML, JSON, and Markdown.

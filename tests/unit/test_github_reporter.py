@@ -5,7 +5,7 @@ Unit tests for GitHub Reporter functionality.
 Tests GitHub-specific reporting capabilities for constitutional compliance
 validation, including status checks, PR comments, and compliance dashboards.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json
@@ -40,14 +40,14 @@ class TestGitHubStatusCheck(unittest.TestCase):
             context="Constitutional Compliance",
             state="success",
             description="All checks passed",
-            target_url="https://github.com/TeamReel/test/actions/runs/123",
+            target_url="https://github.com/project/test/actions/runs/123",
         )
 
         self.assertEqual(check.context, "Constitutional Compliance")
         self.assertEqual(check.state, "success")
         self.assertEqual(check.description, "All checks passed")
         self.assertEqual(
-            check.target_url, "https://github.com/TeamReel/test/actions/runs/123"
+            check.target_url, "https://github.com/project/test/actions/runs/123"
         )
 
     def test_status_check_without_target_url(self):
@@ -124,7 +124,7 @@ class TestGitHubReporter(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.reporter = GitHubReporter(
-            "TeamReel/test-repo", "https://github.com/TeamReel/test-repo"
+            "project/test-repo", "https://github.com/project/test-repo"
         )
 
         # Create sample compliance reports (using available classes)
@@ -169,12 +169,12 @@ class TestGitHubReporter(unittest.TestCase):
             ),
         ]
 
-    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "TeamReel/test-repo"})
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "project/test-repo"})
     def test_reporter_initialization_from_env(self):
         """Test GitHubReporter initialization from environment variables."""
         reporter = GitHubReporter()
-        self.assertEqual(reporter.repo_name, "TeamReel/test-repo")
-        self.assertEqual(reporter.base_url, "https://github.com/TeamReel/test-repo")
+        self.assertEqual(reporter.repo_name, "project/test-repo")
+        self.assertEqual(reporter.base_url, "https://github.com/project/test-repo")
 
     @patch.dict(
         os.environ,
@@ -490,7 +490,7 @@ class TestGitHubReporterCLI(unittest.TestCase):
 
 if __name__ == "__main__":
     # Set up test environment
-    os.environ.setdefault("GITHUB_REPOSITORY", "TeamReel/test-repo")
+    os.environ.setdefault("GITHUB_REPOSITORY", "project/test-repo")
 
     # Run tests
     unittest.main(verbosity=2)

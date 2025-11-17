@@ -1,4 +1,4 @@
-# TeamReel Constitutional Foundation Requirements
+# project Constitutional Foundation Requirements
 # Dashboard and Web Interface Dependencies
 flask>=2.3.0
 werkzeug>=2.3.0

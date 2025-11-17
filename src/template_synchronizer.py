@@ -5,7 +5,7 @@ Template Synchronization Mechanism - T034
 Maintains consistency between project configurations and master templates.
 Detects template drift, synchronizes updates, and manages version conflicts.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os
@@ -130,7 +130,7 @@ class TemplateSynchronizer:
             'remote_sources': {
                 'primary': {
                     'type': 'github',
-                    'url': 'https://api.github.com/repos/teamreel/constitutional-templates',
+                    'url': 'https://api.github.com/repos/project/constitutional-templates',
                     'branch': 'main',
                     'auth_required': False
                 }
@@ -148,7 +148,7 @@ class TemplateSynchronizer:
                     'protected_sections': ['quality_gates.version'],
                     'auto_merge_strategy': 'conservative'
                 },
-                'naming_conventions_teamreel': {
+                'naming_conventions_project': {
                     'sync_enabled': True,
                     'allow_customizations': True,
                     'protected_sections': [],
@@ -295,7 +295,7 @@ class TemplateSynchronizer:
                 'metadata': {
                     'version': '1.1.0',  # Newer version
                     'created': '2024-01-15T10:00:00Z',
-                    'author': 'TeamReel Constitutional Foundation'
+                    'author': 'project Constitutional Foundation'
                 },
                 'constitutional_enforcement': {
                     'version': '1.1.0',

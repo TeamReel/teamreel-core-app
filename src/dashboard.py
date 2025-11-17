@@ -5,7 +5,7 @@ Constitutional Compliance Dashboard
 Web-based dashboard for real-time constitutional compliance metrics and team visibility.
 Provides comprehensive insights into team adherence to SE principles and quality gates.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import json
@@ -316,7 +316,7 @@ class ConstitutionalDashboard:
             members.append(
                 TeamMember(
                     name=name,
-                    email=f"{name.lower().replace(' ', '.')}@teamreel.com",
+                    email=f"{name.lower().replace(' ', '.')}@project.com",
                     compliance_score=random.uniform(75, 98),
                     recent_commits=random.randint(5, 25),
                     violations=random.randint(0, 8),
@@ -431,7 +431,7 @@ class ConstitutionalDashboard:
 
     def run(self, host: str = "0.0.0.0", port: int = 8080, debug: bool = True):
         """Run the dashboard application."""
-        print(f"🏛️ TeamReel Constitutional Compliance Dashboard")
+        print(f"🏛️ project Constitutional Compliance Dashboard")
         print(f"📊 Starting dashboard at http://{host}:{port}")
         print(f"🔍 Real-time compliance monitoring enabled")
 
@@ -448,7 +448,7 @@ def create_dashboard_template():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeamReel Constitutional Compliance Dashboard</title>
+    <title>project Constitutional Compliance Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
@@ -469,7 +469,7 @@ def create_dashboard_template():
 <body>
     <div class="header">
         <h1>🏛️ Constitutional Compliance Dashboard</h1>
-        <p>Real-time monitoring of TeamReel's constitutional software engineering principles</p>
+        <p>Real-time monitoring of project's constitutional software engineering principles</p>
     </div>
     
     <div class="grid">

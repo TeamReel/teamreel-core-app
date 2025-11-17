@@ -3,10 +3,10 @@
 Naming Convention Validator - Code Naming Standards Quality Gate
 
 This module validates naming conventions across multiple programming languages
-and enforces TeamReel's constitutional naming standards as part of the quality
+and enforces project's constitutional naming standards as part of the quality
 gates system.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import ast
@@ -90,7 +90,7 @@ class NamingValidator:
             ],
         )
 
-        # TeamReel naming conventions (from constitutional requirements)
+        # project naming conventions (from constitutional requirements)
         self.python_conventions = self.config.get("naming", {}).get(
             "python",
             {
@@ -807,7 +807,7 @@ class NamingValidator:
         suggestions.extend(
             [
                 "",
-                "Python naming conventions (TeamReel Constitutional Requirements):",
+                "Python naming conventions (project Constitutional Requirements):",
                 "- Functions: snake_case (get_user_data, calculate_total)",
                 "- Variables: snake_case (user_name, total_count)",
                 "- Classes: PascalCase (UserProfile, DataProcessor)",
@@ -853,7 +853,7 @@ class NamingValidator:
         suggestions.extend(
             [
                 "",
-                "JavaScript naming conventions (TeamReel Constitutional Requirements):",
+                "JavaScript naming conventions (project Constitutional Requirements):",
                 "- Functions: camelCase (getUserData, calculateTotal)",
                 "- Variables: camelCase (userName, totalCount)",
                 "- Classes: PascalCase (UserProfile, DataProcessor)",
@@ -883,7 +883,7 @@ class NamingValidator:
         suggestions.extend(
             [
                 "",
-                "API naming conventions (TeamReel Constitutional Requirements):",
+                "API naming conventions (project Constitutional Requirements):",
                 "- Endpoints: kebab-case with trailing slashes (/user-profiles/, /video-workflows/)",
                 "- Parameters: snake_case (user_id, workflow_type)",
                 "",

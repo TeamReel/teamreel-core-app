@@ -5,7 +5,7 @@ Constitutional Drift Detection System
 Detects when templates fall out of sync with constitutional requirements.
 Monitors template changes, constitutional updates, and SE principle evolution.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import hashlib

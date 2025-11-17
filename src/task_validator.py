@@ -3,10 +3,10 @@
 Task Validator - Constitutional Compliance for Task Execution
 
 This module validates task documents and execution environment for constitutional
-compliance before tasks are executed, ensuring all tasks meet TeamReel's
+compliance before tasks are executed, ensuring all tasks meet project's
 constitutional requirements and quality gates.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import re

@@ -5,7 +5,7 @@ Unit Testing Infrastructure - T035
 Comprehensive unit testing framework for constitutional enforcement components.
 Provides test fixtures, mocks, and utilities for testing all quality gates and validators.
 
-Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
+Part of project's SDD Constitutional Foundation & Enforcement system.
 """
 
 import os
