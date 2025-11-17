@@ -10,23 +10,20 @@ SE Principles Focus: SRP (single responsibility) and Encapsulation (clear interf
 import argparse
 import json
 import os
-from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
 
 try:
     from .compliance_reporter import ComplianceReport, Violation
     from .violation_detector import ViolationDetector
-    from .quality_gates import QualityGateValidator
 except ImportError:
     # Fallback for direct execution
     from compliance_reporter import ComplianceReport, Violation
     from violation_detector import ViolationDetector
-    from quality_gates import QualityGateValidator
 
 
 class ValidationScope(Enum):
@@ -530,6 +527,10 @@ def run_cli() -> None:
     args = _parse_cli_arguments()
     files_to_validate = _load_file_list(args.files)
     scopes = _parse_scopes(args.scope)
+    output_path = (args.output or "").strip() or "constitutional-compliance-report.json"
+    output_parent = Path(output_path).parent
+    if output_parent not in (Path("."), Path("")):
+        output_parent.mkdir(parents=True, exist_ok=True)
 
     if not files_to_validate:
         summary = {
@@ -539,8 +540,8 @@ def run_cli() -> None:
             "error_count": 0,
             "warning_count": 0,
         }
-        _write_json_report([], summary, args.output, files_to_validate)
-        _write_validation_output(summary, args.output)
+        _write_json_report([], summary, output_path, files_to_validate)
+        _write_validation_output(summary, output_path)
         print("No files to validate. Skipping constitutional validation.")
         return
 
@@ -564,8 +565,8 @@ def run_cli() -> None:
             reports.append(error_report)
 
     summary = _aggregate_results(reports)
-    _write_json_report(reports, summary, args.output, files_to_validate)
-    _write_validation_output(summary, args.output)
+    _write_json_report(reports, summary, output_path, files_to_validate)
+    _write_validation_output(summary, output_path)
 
     print(
         "Constitutional validation summary: result={result}, violations={violations}, files={count}".format(

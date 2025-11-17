@@ -22,6 +22,10 @@ inputs:
     description: 'Output format: github, json, terminal'
     required: false
     default: 'github'
+  report-path:
+    description: 'Path to write the aggregated constitutional compliance report'
+    required: false
+    default: 'constitutional-compliance-report.json'
   
   fail-on-violations:
     description: 'Fail the action if constitutional violations are found'
