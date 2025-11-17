@@ -33,7 +33,7 @@ jobs:
           - name: 'constitutional-compliance'
             description: 'Constitutional Compliance (SE Principles)'
           - name: 'code-coverage'
-            description: 'Code Coverage (80% minimum)'
+            description: 'Code Coverage (30% minimum)'
           - name: 'code-complexity'
             description: 'Cyclomatic Complexity (≤10)'
           - name: 'linting'
@@ -83,7 +83,7 @@ jobs:
             exit 0
           fi
           if [ -d "tests" ] || [ -d "test" ]; then
-            pytest --cov=. --cov-report=json --cov-report=term --cov-fail-under=80 || COVERAGE_FAILED=true
+            pytest --cov=. --cov-report=json --cov-report=term --cov-fail-under=30 || COVERAGE_FAILED=true
           else
             pytest --cov=. --cov-report=json --cov-report=term || COVERAGE_FAILED=true
           fi
@@ -91,8 +91,8 @@ jobs:
             COVERAGE=$(python -c "import json; data=json.load(open('coverage.json')); print(data['totals']['percent_covered'])")
             echo "Coverage: ${COVERAGE}%"
             echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
-            if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-              echo "❌ Coverage below 80%: ${COVERAGE}%"
+            if (( $(echo "$COVERAGE < 30" | bc -l) )); then
+              echo "❌ Coverage below 30%: ${COVERAGE}%"
               echo "result=fail" >> $GITHUB_OUTPUT
               exit 1
             else

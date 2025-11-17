@@ -15,6 +15,14 @@ import sys
 import json
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
+
+
+class ConstitutionalValidationError(Exception):
+    """Exception raised when constitutional validation fails."""
+
+    pass
+
+
 from dataclasses import dataclass
 from enum import Enum
 import subprocess
@@ -220,66 +228,72 @@ class SpecKittyConstitutionalPlugin:
             warnings = []
             suggestions = []
 
-            # Validate spec file exists and is readable
-            if not os.path.exists(spec_file):
-                violations.append(
-                    {
-                        "type": "missing_file",
-                        "message": f"Specification file not found: {spec_file}",
-                        "severity": "HIGH",
-                    }
-                )
-            else:
-                # Load and validate spec content
-                with open(spec_file, "r", encoding="utf-8") as f:
-                    spec_content = f.read()
+            # Use the imported SpecValidator for validation
+            try:
+                spec_validator = SpecValidator()
+                validation_result = spec_validator.validate_spec(spec_file)
 
-                # Check required sections
-                required_sections = [
-                    "## Interface Contracts",
-                    "## SE Principles Compliance",
-                    "## User Stories",
-                    "## Success Criteria",
-                ]
+                if hasattr(validation_result, "is_valid") and hasattr(
+                    validation_result, "issues"
+                ):
+                    # Handle validation result - raise exception if validation fails
+                    if not validation_result.is_valid:
+                        error_messages = []
+                        for issue in validation_result.issues:
+                            if hasattr(issue, "message"):
+                                error_messages.append(issue.message)
+                            else:
+                                error_messages.append(str(issue))
 
-                for section in required_sections:
-                    if section not in spec_content:
-                        violations.append(
-                            {
-                                "type": "missing_section",
-                                "message": f"Required section missing: {section}",
-                                "severity": "HIGH",
-                                "suggestion": f"Add {section} section to specification",
-                            }
+                        error_summary = "; ".join(error_messages)
+                        raise ConstitutionalValidationError(
+                            f"Constitutional validation failed: {error_summary}"
+                        )
+                else:
+                    # Fallback validation if validator doesn't return expected format
+                    self._fallback_spec_validation(
+                        spec_file, violations, warnings, suggestions
+                    )
+
+                    # Check if fallback validation found violations - if so, raise exception
+                    if violations:
+                        error_messages = [v.get("message", str(v)) for v in violations]
+                        error_summary = "; ".join(error_messages)
+                        raise ConstitutionalValidationError(
+                            f"Constitutional validation failed: {error_summary}"
                         )
 
-                # Check SE principles compliance section
-                if "## SE Principles Compliance" in spec_content:
-                    se_principles = [
-                        "Single Responsibility Principle",
-                        "Encapsulation",
-                        "Loose Coupling",
-                        "Reusability",
-                        "Portability",
-                        "Defensibility",
-                        "Maintainability",
-                        "Simplicity",
-                    ]
+            except ImportError as e:
+                # Fallback to original validation logic if validator import fails
+                print(
+                    f"⚠️  Warning: SpecValidator import failed: {e}, using fallback validation"
+                )
+                self._fallback_spec_validation(
+                    spec_file, violations, warnings, suggestions
+                )
 
-                    for principle in se_principles:
-                        if principle not in spec_content:
-                            warnings.append(
-                                {
-                                    "type": "missing_se_principle",
-                                    "message": f"SE principle not addressed: {principle}",
-                                    "severity": "MEDIUM",
-                                }
-                            )
+                # Check if fallback validation found violations - if so, raise exception
+                if violations:
+                    error_messages = [v.get("message", str(v)) for v in violations]
+                    error_summary = "; ".join(error_messages)
+                    raise ConstitutionalValidationError(
+                        f"Constitutional validation failed: {error_summary}"
+                    )
+            except AttributeError as e:
+                # Fallback if validator doesn't have expected methods
+                print(
+                    f"⚠️  Warning: SpecValidator missing methods: {e}, using fallback validation"
+                )
+                self._fallback_spec_validation(
+                    spec_file, violations, warnings, suggestions
+                )
 
-                # Check naming conventions in spec
-                if "kebab-case" not in spec_content or "snake_case" not in spec_content:
-                    suggestions.append(
-                        "Include TeamReel naming convention requirements in specification"
+                # Check if fallback validation found violations - if so, raise exception
+                if violations:
+                    error_messages = [v.get("message", str(v)) for v in violations]
+                    error_summary = "; ".join(error_messages)
+                    raise ConstitutionalValidationError(
+                        f"Constitutional validation failed: {error_summary}"
                     )
 
             validation_time = time.time() - start_time
@@ -303,16 +317,90 @@ class SpecKittyConstitutionalPlugin:
                 validation_time=validation_time,
             )
 
+        except ConstitutionalValidationError:
+            # Let constitutional validation errors propagate up
+            raise
         except Exception as e:
             return ValidationResult(
                 stage=SpecKittyStage.SPECIFY,
                 passed=False,
-                violations=[],
+                violations=[
+                    {
+                        "type": "validation_error",
+                        "message": f"Validation failed: {str(e)}",
+                        "severity": "HIGH",
+                    }
+                ],
                 warnings=[],
                 suggestions=[],
                 validation_time=time.time() - start_time,
-                error_message=str(e),
             )
+
+    def _fallback_spec_validation(
+        self, spec_file: str, violations: list, warnings: list, suggestions: list
+    ):
+        """Fallback validation logic for specifications"""
+        # Validate spec file exists and is readable
+        if not os.path.exists(spec_file):
+            violations.append(
+                {
+                    "type": "missing_file",
+                    "message": f"Specification file not found: {spec_file}",
+                    "severity": "HIGH",
+                }
+            )
+        else:
+            # Load and validate spec content
+            with open(spec_file, "r", encoding="utf-8") as f:
+                spec_content = f.read()
+
+            # Check required sections
+            required_sections = [
+                "## Interface Contracts",
+                "## SE Principles Compliance",
+                "## User Stories",
+                "## Success Criteria",
+            ]
+
+            for section in required_sections:
+                if section not in spec_content:
+                    violations.append(
+                        {
+                            "type": "missing_section",
+                            "message": f"Required section missing: {section}",
+                            "severity": "HIGH",
+                            "suggestion": f"Add {section} section to specification",
+                        }
+                    )
+
+            # Check SE principles compliance section
+            if "## SE Principles Compliance" in spec_content:
+                se_principles = [
+                    "Single Responsibility Principle",
+                    "Encapsulation",
+                    "Loose Coupling",
+                    "Reusability",
+                    "Portability",
+                    "Defensibility",
+                    "Maintainability",
+                    "Simplicity",
+                ]
+
+                for principle in se_principles:
+                    if principle not in spec_content:
+                        warnings.append(
+                            {
+                                "type": "missing_se_principle",
+                                "message": f"SE principle not addressed: {principle}",
+                                "severity": "MEDIUM",
+                            }
+                        )
+
+            # Check naming conventions in spec
+            if "kebab-case" not in spec_content or "snake_case" not in spec_content:
+                suggestions.append(
+                    "Include TeamReel naming convention requirements in specification"
+                )
 
     def hook_plan_validate(self, plan_file: str) -> ValidationResult:
         """Hook for spec-kitty plan command validation"""
@@ -337,57 +425,72 @@ class SpecKittyConstitutionalPlugin:
             warnings = []
             suggestions = []
 
-            if not os.path.exists(plan_file):
-                violations.append(
-                    {
-                        "type": "missing_file",
-                        "message": f"Plan file not found: {plan_file}",
-                        "severity": "HIGH",
-                    }
-                )
-            else:
-                with open(plan_file, "r", encoding="utf-8") as f:
-                    plan_content = f.read()
+            # Use the imported PlanValidator for validation
+            try:
+                plan_validator = PlanValidator()
+                validation_result = plan_validator.validate_plan(plan_file)
 
-                # Check required plan sections
-                required_sections = [
-                    "## Architecture",
-                    "## SE Principles Integration",
-                    "## Quality Gates",
-                    "## Testing Strategy",
-                ]
+                if hasattr(validation_result, "is_valid") and hasattr(
+                    validation_result, "issues"
+                ):
+                    # Handle validation result - raise exception if validation fails
+                    if not validation_result.is_valid:
+                        error_messages = []
+                        for issue in validation_result.issues:
+                            if hasattr(issue, "message"):
+                                error_messages.append(issue.message)
+                            else:
+                                error_messages.append(str(issue))
 
-                for section in required_sections:
-                    if section not in plan_content:
-                        violations.append(
-                            {
-                                "type": "missing_section",
-                                "message": f"Required plan section missing: {section}",
-                                "severity": "HIGH",
-                                "suggestion": f"Add {section} section to implementation plan",
-                            }
+                        error_summary = "; ".join(error_messages)
+                        raise ConstitutionalValidationError(
+                            f"Constitutional validation failed: {error_summary}"
                         )
-
-                # Check for quality gate integration
-                quality_gates = ["coverage", "complexity", "security", "naming"]
-                missing_gates = []
-                for gate in quality_gates:
-                    if gate not in plan_content.lower():
-                        missing_gates.append(gate)
-
-                if missing_gates:
-                    warnings.append(
-                        {
-                            "type": "missing_quality_gates",
-                            "message": f"Quality gates not mentioned: {', '.join(missing_gates)}",
-                            "severity": "MEDIUM",
-                        }
+                else:
+                    # Fallback validation if validator doesn't return expected format
+                    self._fallback_plan_validation(
+                        plan_file, violations, warnings, suggestions
                     )
 
-                # Check for SE principles architecture compliance
-                if "distributed plugin architecture" not in plan_content.lower():
-                    suggestions.append(
-                        "Consider distributed plugin architecture for better SE principles compliance"
+                    # Check if fallback validation found violations - if so, raise exception
+                    if violations:
+                        error_messages = [v.get("message", str(v)) for v in violations]
+                        error_summary = "; ".join(error_messages)
+                        raise ConstitutionalValidationError(
+                            f"Constitutional validation failed: {error_summary}"
+                        )
+
+            except ImportError as e:
+                # Fallback to original validation logic if validator import fails
+                print(
+                    f"⚠️  Warning: PlanValidator import failed: {e}, using fallback validation"
+                )
+                self._fallback_plan_validation(
+                    plan_file, violations, warnings, suggestions
+                )
+
+                # Check if fallback validation found violations - if so, raise exception
+                if violations:
+                    error_messages = [v.get("message", str(v)) for v in violations]
+                    error_summary = "; ".join(error_messages)
+                    raise ConstitutionalValidationError(
+                        f"Constitutional validation failed: {error_summary}"
+                    )
+            except AttributeError as e:
+                # Fallback if validator doesn't have expected methods
+                print(
+                    f"⚠️  Warning: PlanValidator missing methods: {e}, using fallback validation"
+                )
+                self._fallback_plan_validation(
+                    plan_file, violations, warnings, suggestions
+                )
+
+                # Check if fallback validation found violations - if so, raise exception
+                if violations:
+                    error_messages = [v.get("message", str(v)) for v in violations]
+                    error_summary = "; ".join(error_messages)
+                    raise ConstitutionalValidationError(
+                        f"Constitutional validation failed: {error_summary}"
                     )
 
             validation_time = time.time() - start_time
@@ -401,6 +504,9 @@ class SpecKittyConstitutionalPlugin:
                 validation_time=validation_time,
             )
 
+        except ConstitutionalValidationError:
+            # Let constitutional validation errors propagate up
+            raise
         except Exception as e:
             return ValidationResult(
                 stage=SpecKittyStage.PLAN,
@@ -411,6 +517,63 @@ class SpecKittyConstitutionalPlugin:
                 validation_time=time.time() - start_time,
                 error_message=str(e),
             )
+
+    def _fallback_plan_validation(
+        self, plan_file: str, violations: list, warnings: list, suggestions: list
+    ):
+        """Fallback validation logic for plans"""
+        if not os.path.exists(plan_file):
+            violations.append(
+                {
+                    "type": "missing_file",
+                    "message": f"Plan file not found: {plan_file}",
+                    "severity": "HIGH",
+                }
+            )
+        else:
+            with open(plan_file, "r", encoding="utf-8") as f:
+                plan_content = f.read()
+
+            # Check required plan sections
+            required_sections = [
+                "## Architecture",
+                "## SE Principles Integration",
+                "## Quality Gates",
+                "## Testing Strategy",
+            ]
+
+            for section in required_sections:
+                if section not in plan_content:
+                    violations.append(
+                        {
+                            "type": "missing_section",
+                            "message": f"Required plan section missing: {section}",
+                            "severity": "HIGH",
+                            "suggestion": f"Add {section} section to implementation plan",
+                        }
+                    )
+
+            # Check for quality gate integration
+            quality_gates = ["coverage", "complexity", "security", "naming"]
+            missing_gates = []
+            for gate in quality_gates:
+                if gate not in plan_content.lower():
+                    missing_gates.append(gate)
+
+            if missing_gates:
+                warnings.append(
+                    {
+                        "type": "missing_quality_gates",
+                        "message": f"Quality gates not mentioned: {', '.join(missing_gates)}",
+                        "severity": "MEDIUM",
+                    }
+                )
+
+            # Check for SE principles architecture compliance
+            if "distributed plugin architecture" not in plan_content.lower():
+                suggestions.append(
+                    "Consider distributed plugin architecture for better SE principles compliance"
+                )
 
     def hook_tasks_validate(self, tasks_file: str) -> ValidationResult:
         """Hook for spec-kitty tasks command validation"""
@@ -435,64 +598,72 @@ class SpecKittyConstitutionalPlugin:
             warnings = []
             suggestions = []
 
-            if not os.path.exists(tasks_file):
-                violations.append(
-                    {
-                        "type": "missing_file",
-                        "message": f"Tasks file not found: {tasks_file}",
-                        "severity": "HIGH",
-                    }
+            # Use the imported TaskValidator for validation
+            try:
+                task_validator = TaskValidator()
+                validation_result = task_validator.validate_task(tasks_file)
+
+                if hasattr(validation_result, "is_valid") and hasattr(
+                    validation_result, "issues"
+                ):
+                    # Handle validation result - raise exception if validation fails
+                    if not validation_result.is_valid:
+                        error_messages = []
+                        for issue in validation_result.issues:
+                            if hasattr(issue, "message"):
+                                error_messages.append(issue.message)
+                            else:
+                                error_messages.append(str(issue))
+
+                        error_summary = "; ".join(error_messages)
+                        raise ConstitutionalValidationError(
+                            f"Constitutional validation failed: {error_summary}"
+                        )
+                else:
+                    # Fallback validation if validator doesn't return expected format
+                    self._fallback_task_validation(
+                        tasks_file, violations, warnings, suggestions
+                    )
+
+                    # Check if fallback validation found violations - if so, raise exception
+                    if violations:
+                        error_messages = [v.get("message", str(v)) for v in violations]
+                        error_summary = "; ".join(error_messages)
+                        raise ConstitutionalValidationError(
+                            f"Constitutional validation failed: {error_summary}"
+                        )
+
+            except ImportError as e:
+                # Fallback to original validation logic if validator import fails
+                print(
+                    f"⚠️  Warning: TaskValidator import failed: {e}, using fallback validation"
                 )
-            else:
-                with open(tasks_file, "r", encoding="utf-8") as f:
-                    tasks_content = f.read()
+                self._fallback_task_validation(
+                    tasks_file, violations, warnings, suggestions
+                )
 
-                # Check for required task structure
-                if "## Work Package" not in tasks_content:
-                    violations.append(
-                        {
-                            "type": "missing_structure",
-                            "message": "Work package structure not found in tasks",
-                            "severity": "HIGH",
-                        }
+                # Check if fallback validation found violations - if so, raise exception
+                if violations:
+                    error_messages = [v.get("message", str(v)) for v in violations]
+                    error_summary = "; ".join(error_messages)
+                    raise ConstitutionalValidationError(
+                        f"Constitutional validation failed: {error_summary}"
                     )
+            except AttributeError as e:
+                # Fallback if validator doesn't have expected methods
+                print(
+                    f"⚠️  Warning: TaskValidator missing methods: {e}, using fallback validation"
+                )
+                self._fallback_task_validation(
+                    tasks_file, violations, warnings, suggestions
+                )
 
-                # Check for constitutional compliance tasks
-                constitutional_keywords = [
-                    "constitutional validation",
-                    "se principles",
-                    "quality gates",
-                    "compliance",
-                ]
-
-                missing_constitutional = []
-                for keyword in constitutional_keywords:
-                    if keyword not in tasks_content.lower():
-                        missing_constitutional.append(keyword)
-
-                if missing_constitutional:
-                    warnings.append(
-                        {
-                            "type": "missing_constitutional_tasks",
-                            "message": f"Constitutional aspects not addressed in tasks: {', '.join(missing_constitutional)}",
-                            "severity": "MEDIUM",
-                        }
-                    )
-
-                # Check for proper task dependencies
-                if "Dependencies:" not in tasks_content:
-                    suggestions.append(
-                        "Include task dependencies for better project coordination"
-                    )
-
-                # Check for test tasks
-                if "test" not in tasks_content.lower():
-                    warnings.append(
-                        {
-                            "type": "missing_tests",
-                            "message": "No testing tasks found in task breakdown",
-                            "severity": "MEDIUM",
-                        }
+                # Check if fallback validation found violations - if so, raise exception
+                if violations:
+                    error_messages = [v.get("message", str(v)) for v in violations]
+                    error_summary = "; ".join(error_messages)
+                    raise ConstitutionalValidationError(
+                        f"Constitutional validation failed: {error_summary}"
                     )
 
             validation_time = time.time() - start_time
@@ -506,6 +677,9 @@ class SpecKittyConstitutionalPlugin:
                 validation_time=validation_time,
             )
 
+        except ConstitutionalValidationError:
+            # Let constitutional validation errors propagate up
+            raise
         except Exception as e:
             return ValidationResult(
                 stage=SpecKittyStage.TASKS,
@@ -516,6 +690,69 @@ class SpecKittyConstitutionalPlugin:
                 validation_time=time.time() - start_time,
                 error_message=str(e),
             )
+
+    def _fallback_task_validation(
+        self, tasks_file: str, violations: list, warnings: list, suggestions: list
+    ):
+        """Fallback validation logic for tasks"""
+        if not os.path.exists(tasks_file):
+            violations.append(
+                {
+                    "type": "missing_file",
+                    "message": f"Tasks file not found: {tasks_file}",
+                    "severity": "HIGH",
+                }
+            )
+        else:
+            with open(tasks_file, "r", encoding="utf-8") as f:
+                tasks_content = f.read()
+
+            # Check for required task structure
+            if "## Work Package" not in tasks_content:
+                violations.append(
+                    {
+                        "type": "missing_structure",
+                        "message": "Work package structure not found in tasks",
+                        "severity": "HIGH",
+                    }
+                )
+
+            # Check for constitutional compliance tasks
+            constitutional_keywords = [
+                "constitutional validation",
+                "se principles",
+                "quality gates",
+                "compliance",
+            ]
+            missing_constitutional = []
+            for keyword in constitutional_keywords:
+                if keyword not in tasks_content.lower():
+                    missing_constitutional.append(keyword)
+
+            if missing_constitutional:
+                warnings.append(
+                    {
+                        "type": "missing_constitutional_tasks",
+                        "message": f"Constitutional aspects not addressed in tasks: {', '.join(missing_constitutional)}",
+                        "severity": "MEDIUM",
+                    }
+                )
+
+            # Check for proper task dependencies
+            if "Dependencies:" not in tasks_content:
+                suggestions.append(
+                    "Include task dependencies for better project coordination"
+                )
+
+            # Check for test tasks
+            if "test" not in tasks_content.lower():
+                warnings.append(
+                    {
+                        "type": "missing_tests",
+                        "message": "No testing tasks found in task breakdown",
+                        "severity": "MEDIUM",
+                    }
+                )
 
     def hook_implement_validate(
         self, implementation_files: List[str]
