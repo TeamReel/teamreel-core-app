@@ -12,12 +12,11 @@ Part of TeamReel's SDD Constitutional Foundation & Enforcement system.
 import json
 import os
 import sys
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 
-from compliance_reporter import ComplianceReport, Violation
+from compliance_reporter import Violation
 
 
 @dataclass
@@ -158,7 +157,7 @@ class GitHubReporter:
         # Main constitutional compliance check
         total_violations = sum(len(result.violations) for result in validation_results)
         description = (
-            f"Constitutional compliance passed"
+            "Constitutional compliance passed"
             if overall_state == "success"
             else f"{total_violations} violations found"
         )
@@ -329,7 +328,7 @@ class GitHubReporter:
             [
                 "---",
                 "*This report was generated automatically by TeamReel's Constitutional Enforcement system*",
-                f"*Workflow: [`constitutional-compliance.yml`](.github/workflows/constitutional-compliance.yml)*",
+                "*Workflow: [`constitutional-compliance.yml`](.github/workflows/constitutional-compliance.yml)*",
                 (
                     f"*Run Details: [View Workflow]({self.workflow_run_url})*"
                     if self.workflow_run_url
@@ -363,8 +362,8 @@ class GitHubReporter:
             [
                 "## 📊 Validation Results",
                 "",
-                f"| Metric | Value |",
-                f"|--------|-------|",
+                "| Metric | Value |",
+                "|--------|-------|",
                 f"| Files Checked | {report.files_checked} |",
                 f"| Compliance Score | {report.compliance_score}/100 |",
                 f"| Violations Found | {report.violations_count} |",
@@ -546,31 +545,28 @@ def main():
         # Convert to ValidationResult objects (simplified for CLI usage)
         validation_results = []
         for file_path, file_data in validation_data.items():
-            # Mock ValidationResult for demonstration
-            from constitutional_validator import (
-                ValidationResult,
-                ConstitutionalViolation,
-                SEPrinciple,
-            )
-
             violations = []
             for violation_data in file_data.get("violations", []):
-                violation = ConstitutionalViolation(
-                    principle=SEPrinciple(violation_data.get("principle", "unknown")),
-                    level=ValidationLevel(violation_data.get("level", "ERROR")),
-                    message=violation_data.get("message", ""),
-                    line_number=violation_data.get("line", 0),
-                    suggestion=violation_data.get("suggestion", ""),
+                violations.append(
+                    Violation(
+                        principle=violation_data.get("principle", "ValidationError"),
+                        severity=violation_data.get("severity", "ERROR"),
+                        message=violation_data.get("message", ""),
+                        file_path=file_path,
+                        line_number=violation_data.get("line_number"),
+                        suggested_fix=violation_data.get("suggested_fix", ""),
+                        rule_id=violation_data.get("rule_id", ""),
+                    )
                 )
-                violations.append(violation)
 
-            result = ValidationResult(
-                file_path=file_path,
-                is_valid=len(violations) == 0,
-                violations=violations,
-                compliance_score=file_data.get("compliance_score", 100.0),
+            validation_results.append(
+                ValidationResult(
+                    file_path=file_path,
+                    is_valid=len(violations) == 0,
+                    violations=violations,
+                    compliance_score=file_data.get("compliance_score", 100.0),
+                )
             )
-            validation_results.append(result)
 
     except Exception as e:
         print(f"Error loading validation results: {e}")
@@ -611,7 +607,7 @@ def main():
         print("GitHub Actions step summary created")
 
     # Print summary
-    print(f"\nCompliance Summary:")
+    print("\nCompliance Summary:")
     print(f"Files checked: {report.files_checked}")
     print(f"Compliance score: {report.compliance_score}/100")
     print(f"Violations: {report.violations_count}")
