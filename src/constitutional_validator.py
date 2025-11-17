@@ -10,6 +10,7 @@ SE Principles Focus: SRP (single responsibility) and Encapsulation (clear interf
 import argparse
 import json
 import os
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -24,6 +25,14 @@ except ImportError:
     # Fallback for direct execution
     from compliance_reporter import ComplianceReport, Violation
     from violation_detector import ViolationDetector
+
+
+@dataclass
+class ValidationResult:
+    result: str
+    violations: int
+    files: int
+    report_path: Path
 
 
 class ValidationScope(Enum):
@@ -521,18 +530,30 @@ def _write_validation_output(summary: Dict[str, Any], output_path: str) -> None:
         validation_file.write(f"report-path={output_path}\n")
 
 
-def run_cli() -> None:
-    """Entry point for running the constitutional validator as a CLI."""
+def _normalize_output_path(output_arg: str) -> Path:
+    candidate = (output_arg or "").strip() or "constitutional-compliance-report.json"
+    path = Path(candidate)
+    parent = path.parent
+    if parent and parent not in (Path("."), Path("")):
+        parent.mkdir(parents=True, exist_ok=True)
+    return path
 
-    args = _parse_cli_arguments()
-    files_to_validate = _load_file_list(args.files)
-    scopes = _parse_scopes(args.scope)
-    output_path = (args.output or "").strip() or "constitutional-compliance-report.json"
-    output_parent = Path(output_path).parent
-    if output_parent not in (Path("."), Path("")):
-        output_parent.mkdir(parents=True, exist_ok=True)
 
-    if not files_to_validate:
+def run_validation(
+    files: List[str],
+    config_path: str,
+    scopes: List[str],
+    output_arg: str,
+    display_terminal: bool = False,
+) -> ValidationResult:
+    """Run constitutional validation and persist reports."""
+
+    summary: Dict[str, Any]
+    output_path = _normalize_output_path(output_arg)
+    validator = ConstitutionalValidator(config_path=config_path)
+    reports: List[ComplianceReport] = []
+
+    if not files:
         summary = {
             "validation_result": "pass",
             "compliance_score": 100,
@@ -540,42 +561,71 @@ def run_cli() -> None:
             "error_count": 0,
             "warning_count": 0,
         }
-        _write_json_report([], summary, output_path, files_to_validate)
-        _write_validation_output(summary, output_path)
-        print("No files to validate. Skipping constitutional validation.")
-        return
+        _write_json_report([], summary, str(output_path), files)
+        _write_validation_output(summary, str(output_path))
+        return ValidationResult(
+            result=summary["validation_result"],
+            violations=summary["violations_count"],
+            files=len(files),
+            report_path=output_path,
+        )
 
-    validator = ConstitutionalValidator(config_path=args.config)
-    reports: List[ComplianceReport] = []
-
-    for file_path in files_to_validate:
+    for file_path in files:
         try:
             report = validator.validate(file_path, scopes)
             reports.append(report)
-            if args.format == "terminal":
+            if display_terminal:
                 print(report.to_human_readable())
-        except (
-            Exception
-        ) as exc:  # noqa: BLE001  pragma: no cover - defensive error handling
-            error_report = (
+        except Exception as exc:
+            reports.append(
                 validator._create_error_report(  # pylint: disable=protected-access
                     file_path, f"Validation failed: {exc}"
                 )
             )
-            reports.append(error_report)
 
     summary = _aggregate_results(reports)
-    _write_json_report(reports, summary, output_path, files_to_validate)
-    _write_validation_output(summary, output_path)
+    _write_json_report(reports, summary, str(output_path), files)
+    _write_validation_output(summary, str(output_path))
+
+    return ValidationResult(
+        result=summary["validation_result"],
+        violations=summary["violations_count"],
+        files=len(files),
+        report_path=output_path,
+    )
+
+
+def run_cli() -> None:
+    """Entry point for running the constitutional validator as a CLI."""
+
+    args = _parse_cli_arguments()
+    files_to_validate = _load_file_list(args.files)
+    scopes = _parse_scopes(args.scope)
+    result = run_validation(
+        files=files_to_validate,
+        config_path=args.config,
+        scopes=scopes,
+        output_arg=args.output,
+        display_terminal=args.format == "terminal",
+    )
+
+    if args.format == "terminal" and files_to_validate:
+        validator = ConstitutionalValidator(config_path=args.config)
+        for file_path in files_to_validate:
+            report = validator.validate(file_path, scopes)
+            print(report.to_human_readable())
 
     print(
-        "Constitutional validation summary: result={result}, violations={violations}, files={count}".format(
-            result=summary["validation_result"],
-            violations=summary["violations_count"],
-            count=len(files_to_validate),
-        )
+        f"Constitutional validation summary: result={result.result}, violations={result.violations}, files={result.files}"
     )
 
 
 if __name__ == "__main__":
     run_cli()
+
+__all__ = [
+    "ConstitutionalValidator",
+    "ValidationScope",
+    "ValidationResult",
+    "run_validation",
+]
