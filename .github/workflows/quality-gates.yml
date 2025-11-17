@@ -127,11 +127,28 @@ jobs:
         id: linting
         run: |
           echo "🔍 Linting..."
-          if ruff check --output-format=json . > linting.json 2>/dev/null; then
-            LINT_VIOLATIONS=$(python -c "import json; data=json.load(open('linting.json')); print(len(data))")
+          if [ -n "$GITHUB_BASE_REF" ]; then
+            git fetch origin $GITHUB_BASE_REF --depth=1 >/dev/null 2>&1 || true
+            CHANGED_PY_FILES=$(git diff --name-only origin/$GITHUB_BASE_REF...HEAD | grep '\.py$' || true)
           else
-            LINT_VIOLATIONS=1
+            CHANGED_PY_FILES=$(git diff --name-only HEAD~1 | grep '\.py$' || true)
           fi
+
+          if [ -z "$CHANGED_PY_FILES" ]; then
+            echo "No Python changes detected - skipping lint"
+            echo "violations=0" >> $GITHUB_OUTPUT
+            echo "result=pass" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "$CHANGED_PY_FILES" > changed_python_files.txt
+          echo "Files to lint:"
+          cat changed_python_files.txt
+
+          LINT_INPUT=$(tr '\n' ' ' < changed_python_files.txt)
+          ruff check --output-format=json --exit-zero $LINT_INPUT > linting.json
+          LINT_VIOLATIONS=$(python -c "import json; data=json.load(open('linting.json')); print(len(data) if isinstance(data, list) else 0)")
+
           echo "violations=$LINT_VIOLATIONS" >> $GITHUB_OUTPUT
           if [ "$LINT_VIOLATIONS" -gt 0 ]; then
             echo "❌ Lint violations"

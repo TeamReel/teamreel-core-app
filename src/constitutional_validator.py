@@ -7,13 +7,16 @@ Implements distributed plugin architecture with offline capability.
 SE Principles Focus: SRP (single responsibility) and Encapsulation (clear interface)
 """
 
-import os
+import argparse
 import json
-import yaml
-from typing import List, Dict, Any, Optional
-from pathlib import Path
+import os
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 try:
     from .compliance_reporter import ComplianceReport, Violation
@@ -389,3 +392,189 @@ class ConstitutionalValidator:
             },
             metadata={"file_path": file_path, "error": error_message},
         )
+
+
+def _parse_cli_arguments() -> argparse.Namespace:
+    """Parse CLI arguments for constitutional validation."""
+
+    parser = argparse.ArgumentParser(
+        description="TeamReel constitutional validation CLI",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--files",
+        required=True,
+        help="Path to a newline-separated file list or a comma-separated string of files to validate.",
+    )
+    parser.add_argument(
+        "--config",
+        default=".kittify/config/se_rules.yaml",
+        help="Path to the constitutional rules configuration file.",
+    )
+    parser.add_argument(
+        "--scope",
+        default="se_principles,quality_gates,naming_conventions,security",
+        help="Comma-separated validation scopes to apply.",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["json", "terminal"],
+        default="json",
+        help="Output format for individual reports written to stdout.",
+    )
+    parser.add_argument(
+        "--output",
+        default="constitutional-compliance-report.json",
+        help="Destination path for the aggregated JSON report.",
+    )
+    return parser.parse_args()
+
+
+def _load_file_list(files_argument: str) -> List[str]:
+    """Load files to validate from either a file path or inline list."""
+
+    if not files_argument:
+        return []
+
+    files_path = Path(files_argument)
+    if files_path.exists():
+        content = files_path.read_text(encoding="utf-8")
+        return [line.strip() for line in content.splitlines() if line.strip()]
+
+    normalized = files_argument.replace("\n", ",")
+    return [item.strip() for item in normalized.split(",") if item.strip()]
+
+
+def _parse_scopes(scope_argument: str) -> List[str]:
+    """Convert comma separated scope argument into a list."""
+
+    if not scope_argument:
+        return [scope.value for scope in ValidationScope]
+
+    values = [entry.strip() for entry in scope_argument.split(",") if entry.strip()]
+    return values or [scope.value for scope in ValidationScope]
+
+
+def _report_to_dict(report: ComplianceReport) -> Dict[str, Any]:
+    """Convert a ComplianceReport into a dictionary."""
+
+    return json.loads(report.to_json())
+
+
+def _aggregate_results(reports: List[ComplianceReport]) -> Dict[str, Any]:
+    """Build an aggregated summary for CLI output."""
+
+    total_violations = sum(len(report.violations) for report in reports)
+    error_count = sum(
+        1
+        for report in reports
+        for violation in report.violations
+        if violation.severity == "ERROR"
+    )
+    warning_count = sum(
+        1
+        for report in reports
+        for violation in report.violations
+        if violation.severity == "WARNING"
+    )
+
+    overall_status = "pass"
+    if any(report.compliance_status == "FAIL" for report in reports):
+        overall_status = "fail"
+    elif any(report.compliance_status == "WARNING" for report in reports):
+        overall_status = "warning"
+
+    compliance_score = max(0, 100 - (error_count * 10) - (warning_count * 5))
+
+    return {
+        "validation_result": overall_status,
+        "compliance_score": compliance_score,
+        "violations_count": total_violations,
+        "error_count": error_count,
+        "warning_count": warning_count,
+    }
+
+
+def _write_json_report(
+    reports: List[ComplianceReport],
+    summary: Dict[str, Any],
+    output_path: str,
+    files: List[str],
+) -> None:
+    """Persist aggregated report details to disk."""
+
+    payload: Dict[str, Any] = {
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "files_validated": files,
+        "summary": summary,
+        "reports": [_report_to_dict(report) for report in reports],
+    }
+
+    with open(output_path, "w", encoding="utf-8") as output_file:
+        json.dump(payload, output_file, indent=2, ensure_ascii=False)
+
+
+def _write_validation_output(summary: Dict[str, Any], output_path: str) -> None:
+    """Create validation_output.txt for downstream parsing."""
+
+    with open("validation_output.txt", "w", encoding="utf-8") as validation_file:
+        validation_file.write(f"result={summary['validation_result']}\n")
+        validation_file.write(f"compliance-score={summary['compliance_score']}\n")
+        validation_file.write(f"violations-count={summary['violations_count']}\n")
+        validation_file.write(f"report-path={output_path}\n")
+
+
+def run_cli() -> None:
+    """Entry point for running the constitutional validator as a CLI."""
+
+    args = _parse_cli_arguments()
+    files_to_validate = _load_file_list(args.files)
+    scopes = _parse_scopes(args.scope)
+
+    if not files_to_validate:
+        summary = {
+            "validation_result": "pass",
+            "compliance_score": 100,
+            "violations_count": 0,
+            "error_count": 0,
+            "warning_count": 0,
+        }
+        _write_json_report([], summary, args.output, files_to_validate)
+        _write_validation_output(summary, args.output)
+        print("No files to validate. Skipping constitutional validation.")
+        return
+
+    validator = ConstitutionalValidator(config_path=args.config)
+    reports: List[ComplianceReport] = []
+
+    for file_path in files_to_validate:
+        try:
+            report = validator.validate(file_path, scopes)
+            reports.append(report)
+            if args.format == "terminal":
+                print(report.to_human_readable())
+        except (
+            Exception
+        ) as exc:  # noqa: BLE001  pragma: no cover - defensive error handling
+            error_report = (
+                validator._create_error_report(  # pylint: disable=protected-access
+                    file_path, f"Validation failed: {exc}"
+                )
+            )
+            reports.append(error_report)
+
+    summary = _aggregate_results(reports)
+    _write_json_report(reports, summary, args.output, files_to_validate)
+    _write_validation_output(summary, args.output)
+
+    print(
+        "Constitutional validation summary: result={result}, violations={violations}, files={count}".format(
+            result=summary["validation_result"],
+            violations=summary["violations_count"],
+            count=len(files_to_validate),
+        )
+    )
+
+
+if __name__ == "__main__":
+    run_cli()

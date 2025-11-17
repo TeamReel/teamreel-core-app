@@ -10,11 +10,15 @@ SE Principle Focus:
 - Reusability: Constitutional validation reused across workflow stages
 """
 
+import json
 import os
 import sys
-import json
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 
 class ConstitutionalValidationError(Exception):
@@ -22,11 +26,6 @@ class ConstitutionalValidationError(Exception):
 
     pass
 
-
-from dataclasses import dataclass
-from enum import Enum
-import subprocess
-import yaml
 
 # Import validators for plugin integration
 try:
@@ -874,7 +873,7 @@ class SpecKittyConstitutionalPlugin:
 
         # Suggestions
         if result.suggestions:
-            lines.append(f"\n💡 Suggestions:")
+            lines.append("\n💡 Suggestions:")
             for i, suggestion in enumerate(result.suggestions, 1):
                 lines.append(f"  {i}. {suggestion}")
 

@@ -9,14 +9,13 @@ import tempfile
 import os
 from pathlib import Path
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 # Import test subjects
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src" / "plugins"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from spec_kitty_plugin import SpecKittyConstitutionalPlugin
-from constitutional_validator import ConstitutionalValidator
 
 
 class TestSpecKittyConstitutionalPlugin:
