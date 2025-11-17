@@ -10,7 +10,7 @@ SE Principles Focus: SRP (single responsibility) and Encapsulation (clear interf
 import argparse
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -30,9 +30,10 @@ except ImportError:
 @dataclass
 class ValidationResult:
     result: str
-    violations: int
-    files: int
-    report_path: Path
+    compliance_score: int
+    violations: List[Dict[str, Any]]
+    files: List[str]
+    report_path: str
 
 
 class ValidationScope(Enum):
@@ -501,23 +502,24 @@ def _aggregate_results(reports: List[ComplianceReport]) -> Dict[str, Any]:
     }
 
 
-def _write_json_report(
-    reports: List[ComplianceReport],
-    summary: Dict[str, Any],
-    output_path: str,
-    files: List[str],
-) -> None:
-    """Persist aggregated report details to disk."""
+def _collect_violation_dicts(reports: List[ComplianceReport]) -> List[Dict[str, Any]]:
+    """Convert all detected violations into JSON-friendly dictionaries."""
 
-    payload: Dict[str, Any] = {
-        "generated_at": datetime.utcnow().isoformat() + "Z",
-        "files_validated": files,
-        "summary": summary,
-        "reports": [_report_to_dict(report) for report in reports],
+    return [asdict(violation) for report in reports for violation in report.violations]
+
+
+def _write_json_report(validation_result: ValidationResult) -> None:
+    """Persist the validation result to disk as a JSON object."""
+
+    report = {
+        "result": validation_result.result,
+        "compliance_score": validation_result.compliance_score,
+        "violations": _normalize_violations_payload(validation_result.violations),
+        "files": _normalize_file_entries(validation_result.files),
     }
 
-    with open(output_path, "w", encoding="utf-8") as output_file:
-        json.dump(payload, output_file, indent=2, ensure_ascii=False)
+    with open(validation_result.report_path, "w", encoding="utf-8") as output_file:
+        json.dump(report, output_file, indent=2)
 
 
 def _write_validation_output(summary: Dict[str, Any], output_path: str) -> None:
@@ -539,6 +541,48 @@ def _normalize_output_path(output_arg: str) -> Path:
     return path
 
 
+def _normalize_file_entries(file_entries: Any) -> List[str]:
+    """Ensure file entries are always returned as a list of strings."""
+
+    if file_entries is None:
+        return []
+
+    if isinstance(file_entries, (str, bytes, Path)):
+        return [str(file_entries)]
+
+    normalized = []
+    for entry in file_entries:
+        normalized.append(str(entry))
+    return normalized
+
+
+def _normalize_violations_payload(violations: Any) -> List[Dict[str, Any]]:
+    """Convert violations into a JSON-serializable list of dictionaries."""
+
+    if violations is None:
+        return []
+
+    if isinstance(violations, str):
+        try:
+            parsed = json.loads(violations)
+            if isinstance(parsed, list):
+                return parsed
+            return [parsed]
+        except json.JSONDecodeError:
+            return [{"message": violations}]
+
+    normalized: List[Dict[str, Any]] = []
+    for violation in violations:
+        if isinstance(violation, dict):
+            normalized.append(violation)
+        elif hasattr(violation, "__dict__"):
+            normalized.append(asdict(violation))
+        else:
+            normalized.append({"message": str(violation)})
+
+    return normalized
+
+
 def run_validation(
     files: List[str],
     config_path: str,
@@ -552,8 +596,9 @@ def run_validation(
     output_path = _normalize_output_path(output_arg)
     validator = ConstitutionalValidator(config_path=config_path)
     reports: List[ComplianceReport] = []
+    normalized_files = _normalize_file_entries(files)
 
-    if not files:
+    if not normalized_files:
         summary = {
             "validation_result": "pass",
             "compliance_score": 100,
@@ -561,16 +606,18 @@ def run_validation(
             "error_count": 0,
             "warning_count": 0,
         }
-        _write_json_report([], summary, str(output_path), files)
-        _write_validation_output(summary, str(output_path))
-        return ValidationResult(
+        validation_result = ValidationResult(
             result=summary["validation_result"],
-            violations=summary["violations_count"],
-            files=len(files),
-            report_path=output_path,
+            compliance_score=summary["compliance_score"],
+            violations=[],
+            files=normalized_files,
+            report_path=str(output_path),
         )
+        _write_json_report(validation_result)
+        _write_validation_output(summary, str(output_path))
+        return validation_result
 
-    for file_path in files:
+    for file_path in normalized_files:
         try:
             report = validator.validate(file_path, scopes)
             reports.append(report)
@@ -584,15 +631,17 @@ def run_validation(
             )
 
     summary = _aggregate_results(reports)
-    _write_json_report(reports, summary, str(output_path), files)
+    validation_result = ValidationResult(
+        result=summary["validation_result"],
+        compliance_score=summary["compliance_score"],
+        violations=_collect_violation_dicts(reports),
+        files=normalized_files,
+        report_path=str(output_path),
+    )
+    _write_json_report(validation_result)
     _write_validation_output(summary, str(output_path))
 
-    return ValidationResult(
-        result=summary["validation_result"],
-        violations=summary["violations_count"],
-        files=len(files),
-        report_path=output_path,
-    )
+    return validation_result
 
 
 def run_cli() -> None:
