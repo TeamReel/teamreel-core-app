@@ -11,7 +11,6 @@ import argparse
 import json
 import os
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List
@@ -510,7 +509,7 @@ def _collect_violation_dicts(reports: List[ComplianceReport]) -> List[Dict[str, 
 
 def _write_json_report(validation_result: ValidationResult) -> None:
     """Persist the validation result to disk as a JSON object.
-    
+
     Writes a file-based structure expected by github_reporter.py:
     {
         "file1.py": {"violations": [...], "compliance_score": 100},
@@ -520,26 +519,27 @@ def _write_json_report(validation_result: ValidationResult) -> None:
 
     # Normalize violations to ensure they're JSON-safe dicts
     normalized_violations = _normalize_violations_payload(validation_result.violations)
-    
+
     # Group violations by file_path
     files_data = {}
     for file_path in _normalize_file_entries(validation_result.files):
         # Get violations for this specific file
         file_violations = [
-            v for v in normalized_violations 
-            if v.get("file_path") == file_path
+            v for v in normalized_violations if v.get("file_path") == file_path
         ]
-        
+
         # Calculate file-specific compliance score
         error_count = sum(1 for v in file_violations if v.get("severity") == "ERROR")
-        warning_count = sum(1 for v in file_violations if v.get("severity") == "WARNING")
+        warning_count = sum(
+            1 for v in file_violations if v.get("severity") == "WARNING"
+        )
         file_score = max(0, 100 - (error_count * 10) - (warning_count * 5))
-        
+
         files_data[file_path] = {
             "violations": file_violations,
             "compliance_score": file_score,
         }
-    
+
     # If no files were validated, create a summary entry
     if not files_data:
         files_data["__summary__"] = {
